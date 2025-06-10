@@ -2,6 +2,8 @@ import { renderHeaderComponent } from './header-component.js'
 import { renderUploadImageComponent } from './upload-image-component.js'
 
 export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
+    let imageUrl = ''
+
     const render = () => {
         console.log('запуск рендера поста')
 
@@ -34,14 +36,13 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         const imageDescription = document.getElementById('image-description')
         const fileInputElement = document.getElementById('file-upload-input')
         const previewContainer = document.getElementById('preview-container')
-        let imageUrl = ''
 
         const validation = () => {
             if (!imageUrl && imageDescription.value.trim() !== '') {
                 return alert('Заполните обязательные поля')
             }
         }
-        
+
         if (previewContainer) {
             renderUploadImageComponent({
                 element: previewContainer,

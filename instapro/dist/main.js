@@ -151,6 +151,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
+    let imageUrl = ''
+
     const render = () => {
         console.log('запуск рендера поста')
 
@@ -183,14 +185,13 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         const imageDescription = document.getElementById('image-description')
         const fileInputElement = document.getElementById('file-upload-input')
         const previewContainer = document.getElementById('preview-container')
-        let imageUrl = ''
 
         const validation = () => {
             if (!imageUrl && imageDescription.value.trim() !== '') {
                 return alert('Заполните обязательные поля')
             }
         }
-        
+
         if (previewContainer) {
             (0,_upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__.renderUploadImageComponent)({
                 element: previewContainer,
