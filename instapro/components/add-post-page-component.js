@@ -1,4 +1,5 @@
 import { renderHeaderComponent } from './header-component.js'
+import { renderUploadImageComponent } from './upload-image-component.js'
 
 export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     const render = () => {
@@ -11,10 +12,7 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     <div class="form-input">
          <h3 class="form-title">Добавить пост</h3>
     
-    <label for="file-upload-input" class="button secondary-button" style="cursor: pointer;">
-        <input type="file" class="file-upload-input" style="display: none;" id="file-upload-input" /> 
-        Выберите изображение
-    </label>
+    
     
     <div id="preview-container"></div>
     
@@ -37,22 +35,31 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         const previewContainer = document.getElementById('preview-container')
         let imageUrl = ''
 
-        fileInputElement.addEventListener('change', (e) => {
-            const file = e.target.files[0]
-            if (file) {
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    const img = document.createElement('img')
-                    img.src = e.target.result
-                    img.style.maxWidth = '100%'
-                    img.style.marginTop = '10px'
-                    previewContainer.innerHTML = ''
-                    previewContainer.appendChild(img)
-                    imageUrl = e.target.result
-                }
-                reader.readAsDataURL(file)
-            }
-        })
+        // fileInputElement.addEventListener('change', (e) => {
+        //     const file = e.target.files[0]
+        //     if (file) {
+        //         const reader = new FileReader()
+        //         reader.onload = (e) => {
+        //             const img = document.createElement('img')
+        //             img.src = e.target.result
+        //             img.style.maxWidth = '100%'
+        //             img.style.marginTop = '10px'
+        //             previewContainer.innerHTML = ''
+        //             previewContainer.appendChild(img)
+        //             imageUrl = e.target.result
+        //         }
+        //         reader.readAsDataURL(file)
+        //     }
+        // })
+
+        if (previewContainer) {
+            renderUploadImageComponent({
+                element: previewContainer,
+                onImageUrlChange(newImgUrl) {
+                    imageUrl = newImgUrl
+                },
+            })
+        }
 
         document.getElementById('add-button').addEventListener('click', () => {
             if (imageDescription.value === '' || !imageUrl) {
@@ -61,6 +68,7 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             } else {
                 onAddPostClick({
                     description: imageDescription.value, // Здесь можно добавить описание, если нужно
+
                     imageUrl: imageUrl, // Используем сохраненный URL изображения
                 })
                 console.log('кнопка нажата запуск onAddPostClick')

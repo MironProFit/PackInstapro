@@ -25,16 +25,15 @@ __webpack_require__.r(__webpack_exports__);
  * Загружает изображение в облако и возвращает URL загруженного изображения.
  * @param {File} file - Файл изображения для загрузки.
  * @returns {Promise<string>} - URL загруженного изображения.
-*/
+ */
 // "боевая" версия инстапро лежит в ключе prod
 
 // const personalKey = 'prod'
 const personalKey = 'mpf'
 // const baseHost = 'https://webdev-hw-api.vercel.app'
-const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image';
+const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image'
 const baseHost = `https://wedev-api.sky.pro`
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`
-
 
 function getAllPosts() {
     return fetch(postsHost)
@@ -103,35 +102,36 @@ function loginUser({ login, password }) {
     })
 }
 
-function uploadImage(file) {
-    console.log('Запуск загрузки изображения');
+function uploadImage({ file }) {
+    console.log('Запуск загрузки изображения')
 
-    const data = new FormData();
-    data.append('file', file);
+    const data = new FormData()
+    data.append('file', file)
 
     return fetch(uploadImageEndpoint, {
         method: 'POST',
         body: data,
     })
-    .then((response) => {
-        if (!response.ok) {
-            throw new Error('Сеть ответила с ошибкой ' + response.status);
-        }
-        return response.json();
-    })
-    .then((data) => {
-        if (data.fileUrl) {
-            console.log('Изображение загружено:', data.fileUrl); // Выводим URL загруженной картинки
-            return data.fileUrl; // Возвращаем URL загруженного изображения
-        } else {
-            throw new Error('Не удалось получить URL загруженного изображения');
-        }
-    })
-    .catch((error) => {
-        console.error('Ошибка при загрузке изображения:', error);
-        throw error; // Прокидываем ошибку выше
-    });
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Сеть ответила с ошибкой ' + response.status)
+            }
+            return response.json()
+        })
+        .then((data) => {
+            if (data.fileUrl) {
+                console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
+                return data.fileUrl // Возвращаем URL загруженного изображения
+            } else {
+                throw new Error('Не удалось получить URL загруженного изображения')
+            }
+        })
+        .catch((error) => {
+            console.error('Ошибка при загрузке изображения:', error)
+            throw error // Прокидываем ошибку выше
+        })
 }
+
 
 /***/ }),
 
@@ -146,6 +146,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   renderAddPostPageComponent: () => (/* binding */ renderAddPostPageComponent)
 /* harmony export */ });
 /* harmony import */ var _header_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./header-component.js */ "./instapro/components/header-component.js");
+/* harmony import */ var _upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./upload-image-component.js */ "./instapro/components/upload-image-component.js");
+
 
 
 function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
@@ -159,10 +161,7 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     <div class="form-input">
          <h3 class="form-title">Добавить пост</h3>
     
-    <label for="file-upload-input" class="button secondary-button" style="cursor: pointer;">
-        <input type="file" class="file-upload-input" style="display: none;" id="file-upload-input" /> 
-        Выберите изображение
-    </label>
+    
     
     <div id="preview-container"></div>
     
@@ -185,22 +184,31 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         const previewContainer = document.getElementById('preview-container')
         let imageUrl = ''
 
-        fileInputElement.addEventListener('change', (e) => {
-            const file = e.target.files[0]
-            if (file) {
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    const img = document.createElement('img')
-                    img.src = e.target.result
-                    img.style.maxWidth = '100%'
-                    img.style.marginTop = '10px'
-                    previewContainer.innerHTML = ''
-                    previewContainer.appendChild(img)
-                    imageUrl = e.target.result
-                }
-                reader.readAsDataURL(file)
-            }
-        })
+        // fileInputElement.addEventListener('change', (e) => {
+        //     const file = e.target.files[0]
+        //     if (file) {
+        //         const reader = new FileReader()
+        //         reader.onload = (e) => {
+        //             const img = document.createElement('img')
+        //             img.src = e.target.result
+        //             img.style.maxWidth = '100%'
+        //             img.style.marginTop = '10px'
+        //             previewContainer.innerHTML = ''
+        //             previewContainer.appendChild(img)
+        //             imageUrl = e.target.result
+        //         }
+        //         reader.readAsDataURL(file)
+        //     }
+        // })
+
+        if (previewContainer) {
+            (0,_upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__.renderUploadImageComponent)({
+                element: previewContainer,
+                onImageUrlChange(newImgUrl) {
+                    imageUrl = newImgUrl
+                },
+            })
+        }
 
         document.getElementById('add-button').addEventListener('click', () => {
             if (imageDescription.value === '' || !imageUrl) {
@@ -209,6 +217,7 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             } else {
                 onAddPostClick({
                     description: imageDescription.value, // Здесь можно добавить описание, если нужно
+
                     imageUrl: imageUrl, // Используем сохраненный URL изображения
                 })
                 console.log('кнопка нажата запуск onAddPostClick')
@@ -638,6 +647,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   renderUploadImageComponent: () => (/* binding */ renderUploadImageComponent)
 /* harmony export */ });
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
+
 
 
 /**

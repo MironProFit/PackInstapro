@@ -6,16 +6,15 @@ import { renderPostsPageComponent } from './components/posts-page-component.js'
  * Загружает изображение в облако и возвращает URL загруженного изображения.
  * @param {File} file - Файл изображения для загрузки.
  * @returns {Promise<string>} - URL загруженного изображения.
-*/
+ */
 // "боевая" версия инстапро лежит в ключе prod
 
 // const personalKey = 'prod'
 const personalKey = 'mpf'
 // const baseHost = 'https://webdev-hw-api.vercel.app'
-const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image';
+const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image'
 const baseHost = `https://wedev-api.sky.pro`
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`
-
 
 export function getAllPosts() {
     return fetch(postsHost)
@@ -84,32 +83,32 @@ export function loginUser({ login, password }) {
     })
 }
 
-export function uploadImage(file) {
-    console.log('Запуск загрузки изображения');
+export function uploadImage({ file }) {
+    console.log('Запуск загрузки изображения')
 
-    const data = new FormData();
-    data.append('file', file);
+    const data = new FormData()
+    data.append('file', file)
 
     return fetch(uploadImageEndpoint, {
         method: 'POST',
         body: data,
     })
-    .then((response) => {
-        if (!response.ok) {
-            throw new Error('Сеть ответила с ошибкой ' + response.status);
-        }
-        return response.json();
-    })
-    .then((data) => {
-        if (data.fileUrl) {
-            console.log('Изображение загружено:', data.fileUrl); // Выводим URL загруженной картинки
-            return data.fileUrl; // Возвращаем URL загруженного изображения
-        } else {
-            throw new Error('Не удалось получить URL загруженного изображения');
-        }
-    })
-    .catch((error) => {
-        console.error('Ошибка при загрузке изображения:', error);
-        throw error; // Прокидываем ошибку выше
-    });
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Сеть ответила с ошибкой ' + response.status)
+            }
+            return response.json()
+        })
+        .then((data) => {
+            if (data.fileUrl) {
+                console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
+                return data.fileUrl // Возвращаем URL загруженного изображения
+            } else {
+                throw new Error('Не удалось получить URL загруженного изображения')
+            }
+        })
+        .catch((error) => {
+            console.error('Ошибка при загрузке изображения:', error)
+            throw error // Прокидываем ошибку выше
+        })
 }
