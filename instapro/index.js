@@ -1,4 +1,4 @@
-import { getPosts, uploadImage } from './api.js'
+import { getPosts, uploadImage, addPost} from './api.js'
 import { renderAddPostPageComponent } from './components/add-post-page-component.js'
 import { renderAuthPageComponent } from './components/auth-page-component.js'
 import { ADD_POSTS_PAGE, AUTH_PAGE, LOADING_PAGE, POSTS_PAGE, USER_POSTS_PAGE } from './routes.js'
@@ -12,7 +12,7 @@ export let posts = []
 
 const getToken = () => {
     const token = user ? `Bearer ${user.token}` : undefined
-    console.log(token);
+    console.log(token)
     return token
 }
 
@@ -92,31 +92,24 @@ const renderApp = () => {
     }
 
     if (page === ADD_POSTS_PAGE) {
-        console.log('Перешли на страницу загрузки поста');
+        console.log(page)
+        console.log('Перешли на страницу загрузки поста')
+
         return renderAddPostPageComponent({
             appEl,
-            onAddPostClick({ description, imageUrl }) {
-                // Вызываем функцию загрузки изображения
-                uploadImage(imageUrl) // Здесь imageUrl должен быть файлом
-                    .then((imageResponse) => {
-                        // Предполагаем, что imageResponse возвращает объект с URL
-                        const postData = {
-                            description: description,
-                            imageUrl: imageResponse, // Используем imageResponse непосредственно
-                        };
-    
-                        // Добавляем пост через API
-                        return addPostToApi(postData);
-                    })
-                    .then(() => {
-                        console.log('Добавляю пост...', { description, imageUrl });
-                        goToPage(POSTS_PAGE); // Переход на страницу постов
-                    })
-                    .catch((error) => {
-                        console.error('Ошибка добавления поста', error); // Логируем ошибку
-                    });
+            onAddPostClick: async ({ description, imageUrl }) => {
+                try {
+                    const token = getToken()
+                    console.log('Добавляю пост')
+                    const newPost = await addPost({ token, description, imageUrl })
+                    posts.push(newPost) // Добавляем новый пост в массив постов
+                    goToPage(POSTS_PAGE) // Переходим на страницу постов
+                } catch (err) {
+                    console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
+                    alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю
+                }
             },
-        });
+        })
     }
 
     if (page === POSTS_PAGE) {

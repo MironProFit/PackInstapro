@@ -1,4 +1,5 @@
 import { renderPostsPageComponent } from './components/posts-page-component.js'
+import { ADD_POSTS_PAGE } from './routes.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -8,7 +9,7 @@ import { renderPostsPageComponent } from './components/posts-page-component.js'
  * @returns {Promise<string>} - URL загруженного изображения.
  */
 // "боевая" версия инстапро лежит в ключе prod
-
+// https://wedev-api.sky.pro/api/v1/mpf/instapro
 // const personalKey = 'prod'
 const personalKey = 'mpf'
 // const baseHost = 'https://webdev-hw-api.vercel.app'
@@ -49,6 +50,29 @@ export function getPosts({ token }) {
         .then((data) => {
             return data.posts
         })
+}
+export const addPost = () => {
+    const fileInputElement = document.getElementById('image-input')
+    // console.log(fileInputElement);
+    postImage({ file: fileInputElement.files[0] })
+    console.log(postImage({ file: fileInputElement.files[0] }));
+
+    function postImage({ file }) {
+        const data = new FormData()
+        data.append('file', file)
+        console.log(data);
+
+        return fetch(baseHost + '/api/upload/image', {
+            method: 'POST',
+            body: data,
+        })
+            .then((response) => {
+                return response.json()
+            })
+            .then((data) => {
+                console.log(data.fileUrl)
+            })
+    }
 }
 
 export function registerUser({ login, password, name, imageUrl }) {
@@ -102,7 +126,8 @@ export function uploadImage({ file }) {
         .then((data) => {
             if (data.fileUrl) {
                 console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
-                return data.fileUrl // Возвращаем URL загруженного изображения
+                console.log({ fileUrl: data.fileUrl });
+                return { fileUrl: data.fileUrl } // Возвращаем URL загруженного изображения
             } else {
                 throw new Error('Не удалось получить URL загруженного изображения')
             }
