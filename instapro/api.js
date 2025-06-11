@@ -1,5 +1,6 @@
 import { renderPostsPageComponent } from './components/posts-page-component.js'
 import { ADD_POSTS_PAGE } from './routes.js'
+// import { uploadImage} from '../api.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -16,6 +17,7 @@ const personalKey = 'mpf'
 const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image'
 const baseHost = `https://wedev-api.sky.pro`
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`
+export let urlLoadingImage
 
 export function getAllPosts() {
     return fetch(postsHost)
@@ -51,29 +53,42 @@ export function getPosts({ token }) {
             return data.posts
         })
 }
-export const addPost = () => {
-    const fileInputElement = document.getElementById('image-input')
-    // console.log(fileInputElement);
-    postImage({ file: fileInputElement.files[0] })
-    console.log(postImage({ file: fileInputElement.files[0] }));
 
-    function postImage({ file }) {
-        const data = new FormData()
-        data.append('file', file)
-        console.log(data);
+export const addPost = async ({ token, description, urlLoadingImage }) => {
+    try {
+        // Проверяем, что изображение было загружено
+        if (urlLoadingImage && urlLoadingImage.fileUrl) {
+            const newImageUrl = urlLoadingImage.fileUrl; // Получаем URL загруженного изображения
 
-        return fetch(baseHost + '/api/upload/image', {
-            method: 'POST',
-            body: data,
-        })
-            .then((response) => {
-                return response.json()
-            })
-            .then((data) => {
-                console.log(data.fileUrl)
-            })
+            console.log('Загруженный URL изображения:', newImageUrl); // Логируем URL загруженного изображения
+
+            const post = {
+                description,
+                imageUrl: newImageUrl, // Используем загруженный URL
+            };
+
+            const response = await fetch(postsHost, {
+                method: 'POST',
+                headers: {
+                    Authorization: token, // Используем токен для авторизации
+                },
+                body: JSON.stringify(post),
+            });
+
+            if (!response.ok) {
+                throw new Error('Не удалось добавить пост');
+            }
+
+            return await response.json(); // Возвращаем созданный пост
+        } else {
+            console.error('URL загруженного изображения не установлен.');
+            throw new Error('Не выбрано изображение для добавления поста.');
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении поста:', error);
+        throw error; // Прокидываем ошибку выше
     }
-}
+};
 
 export function registerUser({ login, password, name, imageUrl }) {
     return fetch(baseHost + '/api/user', {
@@ -126,7 +141,10 @@ export function uploadImage({ file }) {
         .then((data) => {
             if (data.fileUrl) {
                 console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
-                console.log({ fileUrl: data.fileUrl });
+                urlLoadingImage = { fileUrl: data.fileUrl }
+                console.log({ fileUrl: data.fileUrl })
+                console.log(urlLoadingImage)
+
                 return { fileUrl: data.fileUrl } // Возвращаем URL загруженного изображения
             } else {
                 throw new Error('Не удалось получить URL загруженного изображения')

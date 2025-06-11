@@ -1,4 +1,5 @@
 import { renderHeaderComponent } from './header-component.js'
+
 import { renderUploadImageComponent } from './upload-image-component.js'
 
 export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
@@ -34,7 +35,7 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             element: document.querySelector('.header-container'),
         })
         const imageDescription = document.getElementById('image-description')
-        const fileInputElement = document.getElementById('file-upload-input')
+        // const fileInputElement = document.getElementById('file-upload-input')
         const previewContainer = document.getElementById('preview-container')
 
         const validation = () => {

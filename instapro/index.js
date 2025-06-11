@@ -1,4 +1,4 @@
-import { getPosts, uploadImage, addPost} from './api.js'
+import { getPosts, uploadImage, addPost, urlLoadingImage } from './api.js'
 import { renderAddPostPageComponent } from './components/add-post-page-component.js'
 import { renderAuthPageComponent } from './components/auth-page-component.js'
 import { ADD_POSTS_PAGE, AUTH_PAGE, LOADING_PAGE, POSTS_PAGE, USER_POSTS_PAGE } from './routes.js'
@@ -97,13 +97,23 @@ const renderApp = () => {
 
         return renderAddPostPageComponent({
             appEl,
-            onAddPostClick: async ({ description, imageUrl }) => {
+            onAddPostClick: async ({ description }) => {
                 try {
-                    const token = getToken()
-                    console.log('Добавляю пост')
-                    const newPost = await addPost({ token, description, imageUrl })
+                    console.log(urlLoadingImage) 
+                    const token = getToken() // Получаем токен
+
+                    // Проверяем, выбран ли файл
+                    if (!urlLoadingImage && !urlLoadingImage.fileUrl) {
+                        alert('Пожалуйста, выберите файл для загрузки.')
+                        return // Не продолжать, если файл не выбран
+                    }
+
+
+                    const newPost = await addPost({ token, description, urlLoadingImage }) // Передаем urlLoadingImage
+                    debugger
                     posts.push(newPost) // Добавляем новый пост в массив постов
                     goToPage(POSTS_PAGE) // Переходим на страницу постов
+                    console.log('Добавляю пост')
                 } catch (err) {
                     console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
                     alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю

@@ -15,12 +15,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   getPosts: () => (/* binding */ getPosts),
 /* harmony export */   loginUser: () => (/* binding */ loginUser),
 /* harmony export */   registerUser: () => (/* binding */ registerUser),
-/* harmony export */   uploadImage: () => (/* binding */ uploadImage)
+/* harmony export */   uploadImage: () => (/* binding */ uploadImage),
+/* harmony export */   urlLoadingImage: () => (/* binding */ urlLoadingImage)
 /* harmony export */ });
 /* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
 /* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
 
 
+// import { uploadImage} from '../api.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -37,6 +39,7 @@ const personalKey = 'mpf'
 const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image'
 const baseHost = `https://wedev-api.sky.pro`
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`
+let urlLoadingImage
 
 function getAllPosts() {
     return fetch(postsHost)
@@ -72,29 +75,42 @@ function getPosts({ token }) {
             return data.posts
         })
 }
-const addPost = () => {
-    const fileInputElement = document.getElementById('image-input')
-    // console.log(fileInputElement);
-    postImage({ file: fileInputElement.files[0] })
-    console.log(postImage({ file: fileInputElement.files[0] }));
 
-    function postImage({ file }) {
-        const data = new FormData()
-        data.append('file', file)
-        console.log(data);
+const addPost = async ({ token, description, urlLoadingImage }) => {
+    try {
+        // Проверяем, что изображение было загружено
+        if (urlLoadingImage && urlLoadingImage.fileUrl) {
+            const newImageUrl = urlLoadingImage.fileUrl; // Получаем URL загруженного изображения
 
-        return fetch(baseHost + '/api/upload/image', {
-            method: 'POST',
-            body: data,
-        })
-            .then((response) => {
-                return response.json()
-            })
-            .then((data) => {
-                console.log(data.fileUrl)
-            })
+            console.log('Загруженный URL изображения:', newImageUrl); // Логируем URL загруженного изображения
+
+            const post = {
+                description,
+                imageUrl: newImageUrl, // Используем загруженный URL
+            };
+
+            const response = await fetch(postsHost, {
+                method: 'POST',
+                headers: {
+                    Authorization: token, // Используем токен для авторизации
+                },
+                body: JSON.stringify(post),
+            });
+
+            if (!response.ok) {
+                throw new Error('Не удалось добавить пост');
+            }
+
+            return await response.json(); // Возвращаем созданный пост
+        } else {
+            console.error('URL загруженного изображения не установлен.');
+            throw new Error('Не выбрано изображение для добавления поста.');
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении поста:', error);
+        throw error; // Прокидываем ошибку выше
     }
-}
+};
 
 function registerUser({ login, password, name, imageUrl }) {
     return fetch(baseHost + '/api/user', {
@@ -147,7 +163,10 @@ function uploadImage({ file }) {
         .then((data) => {
             if (data.fileUrl) {
                 console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
-                console.log({ fileUrl: data.fileUrl });
+                urlLoadingImage = { fileUrl: data.fileUrl }
+                console.log({ fileUrl: data.fileUrl })
+                console.log(urlLoadingImage)
+
                 return { fileUrl: data.fileUrl } // Возвращаем URL загруженного изображения
             } else {
                 throw new Error('Не удалось получить URL загруженного изображения')
@@ -174,6 +193,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _header_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./header-component.js */ "./instapro/components/header-component.js");
 /* harmony import */ var _upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./upload-image-component.js */ "./instapro/components/upload-image-component.js");
+
 
 
 
@@ -210,7 +230,7 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             element: document.querySelector('.header-container'),
         })
         const imageDescription = document.getElementById('image-description')
-        const fileInputElement = document.getElementById('file-upload-input')
+        // const fileInputElement = document.getElementById('file-upload-input')
         const previewContainer = document.getElementById('preview-container')
 
         const validation = () => {
@@ -670,85 +690,71 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
 
 
-/**
- * Компонент загрузки изображения.
- * Этот компонент позволяет пользователю загружать изображение и отображать его превью.
- * Если изображение уже загружено, пользователь может заменить его.
- *
- * @param {HTMLElement} params.element - HTML-элемент, в который будет рендериться компонент.
- * @param {Function} params.onImageUrlChange - Функция, вызываемая при изменении URL изображения.
- *                                            Принимает один аргумент - новый URL изображения или пустую строку.
- */
-
 function renderUploadImageComponent({ element, onImageUrlChange }) {
-    /**
-     * URL текущего изображения.
-     * Изначально пуст, пока пользователь не загрузит изображение.
-     * @type {string}
-     */
-    let imageUrl = ''
+  let imageUrl = ''
 
-    /**
-     * Функция рендеринга компонента.
-     * Отображает интерфейс компонента в зависимости от состояния:
-     * либо форма выбора файла, либо превью загруженного изображения с кнопкой замены.
-     */
-    const render = () => {
-        element.innerHTML = `
-      <div class="upload-image">
-        ${
-            imageUrl
-                ? `
-            <div class="file-upload-image-container">
-              <img class="file-upload-image" src="${imageUrl}" alt="Загруженное изображение">
-              <button class="file-upload-remove-button button">Заменить фото</button>
-            </div>
-            `
-                : `
-            <label id="image-input" class="file-upload-label secondary-button">
-              <input
-                type="file"
-                class="file-upload-input"
-                style="display:none"
-              />
-              Выберите фото
-            </label>
+  const render = () => {
+      element.innerHTML = `
+    <div class='upload-image'>
+      ${
+          imageUrl
+              ? `
+          <div class='file-upload-image-container'>
+            <img class='file-upload-image' src='${imageUrl}' alt='Загруженное изображение'>
+            <button class='file-upload-remove-button button'>Заменить фото</button>
+          </div>
           `
-        }
-      </div>
-    `
+              : `
+          <label id='image-input' class='file-upload-label secondary-button'>
+            <input
+              type='file'
+              class='file-upload-input'
+              style='display:none'
+              accept='image/*'
+            />
+            Выберите фото
+          </label>
+        `
+      }
+    </div>
+  `
 
-        // Обработчик выбора файла
-        const fileInputElement = element.querySelector('.file-upload-input')
-        fileInputElement?.addEventListener('change', () => {
-            const file = fileInputElement.files[0]
-            if (file) {
-                const labelEl = document.getElementById('image-input')
-                labelEl.setAttribute('disabled', true)
-                labelEl.textContent = 'Загружаю файл...'
+      const fileInputElement = element.querySelector('.file-upload-input')
+      fileInputElement?.addEventListener('change', () => {
+          const file = fileInputElement.files[0]
+          if (file) {
+              const labelEl = document.getElementById('image-input')
+              labelEl.setAttribute('disabled', true)
+              labelEl.textContent = 'Загружаю файл...'
 
-                // Загружаем изображение с помощью API
-                ;(0,_api_js__WEBPACK_IMPORTED_MODULE_0__.uploadImage)({ file }).then(({ fileUrl }) => {
-                    imageUrl = fileUrl
-                    console.log(imageUrl) // Сохраняем URL загруженного изображения
-                    onImageUrlChange(imageUrl) // Уведомляем о изменении URL изображения
-                    render() // Перерисовываем компонент с новым состоянием
-                })
-            }
-        })
+              ;(0,_api_js__WEBPACK_IMPORTED_MODULE_0__.uploadImage)({ file }).then(({ fileUrl }) => {
+                  imageUrl = fileUrl
+                  console.log(imageUrl)
+                  onImageUrlChange(imageUrl)
+                  render()
+              }).catch(error => {
+                  console.error('Ошибка загрузки изображения:', error)
+                  labelEl.removeAttribute('disabled')
+                  labelEl.textContent = 'Выберите фото'
+              })
+          }
+      })
 
-        // Обработчик удаления изображения
-        element.querySelector('.file-upload-remove-button')?.addEventListener('click', () => {
-            imageUrl = '' // Сбрасываем URL изображения
-            onImageUrlChange(imageUrl) // Уведомляем об изменении URL изображения
-            render() // Перерисовываем компонент
-        })
-    }
+      const removeButton = element.querySelector('.file-upload-remove-button')
+      removeButton?.addEventListener('click', () => {
+          imageUrl = ''
+          onImageUrlChange(imageUrl)
+          render()
+      })
+  }
 
-    // Инициализация компонента
-    render()
+  render()
+
+  // Возвращаем объект с fileInputElement
+  return {
+      fileInputElement: element.querySelector('.file-upload-input') // Теперь мы правильно возвращаем fileInputElement
+  }
 }
-
 
 /***/ }),
 
@@ -903,13 +909,23 @@ const renderApp = () => {
 
         return (0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_1__.renderAddPostPageComponent)({
             appEl,
-            onAddPostClick: async ({ description, imageUrl }) => {
+            onAddPostClick: async ({ description }) => {
                 try {
-                    const token = getToken()
-                    console.log('Добавляю пост')
-                    const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, imageUrl })
+                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage) 
+                    const token = getToken() // Получаем токен
+
+                    // Проверяем, выбран ли файл
+                    if (!_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage && !_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage.fileUrl) {
+                        alert('Пожалуйста, выберите файл для загрузки.')
+                        return // Не продолжать, если файл не выбран
+                    }
+
+
+                    const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, urlLoadingImage: _api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage }) // Передаем urlLoadingImage
+                    debugger
                     posts.push(newPost) // Добавляем новый пост в массив постов
                     goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) // Переходим на страницу постов
+                    console.log('Добавляю пост')
                 } catch (err) {
                     console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
                     alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю
