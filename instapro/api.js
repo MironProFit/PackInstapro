@@ -157,14 +157,15 @@ export function uploadImage({ file }) {
 
 export const likedPost = async ({ tokenId, postId }) => {
     console.log('ID поста для лайка:', postId) // Дебаг: выводим ID поста
-    console.log(tokenId);
+    console.log('Токен:', tokenId) // Дебаг: выводим токен
+
     try {
         // Проверяем, что токен и ID поста существуют
         if (tokenId && postId) {
-            const response = await fetch(`${baseHost}/${postId}/like`, {
+            const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${tokenId}`, // Добавляем Bearer перед токеном
+                    Authorization: `${tokenId}`, // Добавляем Bearer перед токеном
                 },
             })
 
