@@ -165,7 +165,7 @@ export const likedPost = async ({ tokenId, postId }) => {
             const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `${tokenId}`, // Добавляем Bearer перед токеном
+                    Authorization: `${tokenId}`,
                 },
             })
 
@@ -177,6 +177,7 @@ export const likedPost = async ({ tokenId, postId }) => {
 
             const data = await response.json() // Ожидаем результат .json()
             console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+            renderStatusLikedPost({data})
             return data // Возвращаем данные
         } else {
             throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка

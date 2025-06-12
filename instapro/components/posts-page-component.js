@@ -20,6 +20,7 @@ export function renderPostsPageComponent({ appEl }) {
     const renderPostsFromApi = () => {
         const containerPosts = document.querySelector('.posts')
         posts.forEach((post) => {
+            console.log(post)
             const listEl = document.createElement('li')
             listEl.classList.add('post')
             const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
@@ -35,7 +36,7 @@ export function renderPostsPageComponent({ appEl }) {
                 </div>
                 <div class="post-likes">
                     <button data-post-id="${post.id}" class="like-button">
-                        <img src="./assets/images/like-active.svg">
+                        <img src="./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg">
                     </button>
                     <p class="post-likes-text">
                         Нравится: <strong>${post.likes.length}</strong>

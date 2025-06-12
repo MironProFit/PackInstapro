@@ -188,7 +188,7 @@ const likedPost = async ({ tokenId, postId }) => {
             const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `${tokenId}`, // Добавляем Bearer перед токеном
+                    Authorization: `${tokenId}`,
                 },
             })
 
@@ -200,6 +200,7 @@ const likedPost = async ({ tokenId, postId }) => {
 
             const data = await response.json() // Ожидаем результат .json()
             console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+            renderStatusLikedPost({data})
             return data // Возвращаем данные
         } else {
             throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
@@ -579,6 +580,7 @@ function renderHeaderComponent({ element }) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   renderStatusLikedPost: () => (/* binding */ renderStatusLikedPost),
 /* harmony export */   statusLikedPost: () => (/* binding */ statusLikedPost)
 /* harmony export */ });
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
@@ -588,28 +590,27 @@ __webpack_require__.r(__webpack_exports__);
 
 const statusLikedPost = () => {
     console.log('Запуск функции отслеживания лайка')
-    console.log(_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId)
-
     const likeButtons = document.querySelectorAll('.like-button')
     likeButtons.forEach((button) => {
-        console.log('Кнопка лайка найдена')
         button.addEventListener('click', async (e) => {
-            if (_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId) {
-                // Проверка на наличие токена
-                const postId = e.currentTarget.getAttribute('data-post-id')
-                console.log('ID поста:', postId)
+            const postId = e.currentTarget.getAttribute('data-post-id')
 
-                try {
-                    const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId,postId }) // Передача объекта
-                    console.log('Лайк успешно отправлен:', result)
-                } catch (error) {
-                    console.error('Ошибка при лайке поста:', error.message)
-                }
-            } else {
-                console.warn('Токен не найден. Лайк не может быть отправлен.')
+            try {
+                // Отправляем запрос на лайк поста
+                const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+
+                // Обновляем текст количества лайков
+                const likesText = e.currentTarget.nextElementSibling.querySelector('strong')
+                likesText.textContent = result.post.likes.length // Обновляем количество лайков
+            } catch (error) {
+                console.error('Ошибка при лайке поста:', error)
             }
         })
     })
+}
+
+const renderStatusLikedPost = ({data}) => {
+    console.log(data);
 }
 
 
@@ -706,6 +707,7 @@ function renderPostsPageComponent({ appEl }) {
     const renderPostsFromApi = () => {
         const containerPosts = document.querySelector('.posts')
         _index_js__WEBPACK_IMPORTED_MODULE_2__.posts.forEach((post) => {
+            console.log(post)
             const listEl = document.createElement('li')
             listEl.classList.add('post')
             const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_5__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_6__.ru })
@@ -721,7 +723,7 @@ function renderPostsPageComponent({ appEl }) {
                 </div>
                 <div class="post-likes">
                     <button data-post-id="${post.id}" class="like-button">
-                        <img src="./assets/images/like-active.svg">
+                        <img src="./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg">
                     </button>
                     <p class="post-likes-text">
                         Нравится: <strong>${post.likes.length}</strong>
