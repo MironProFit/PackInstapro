@@ -1,5 +1,6 @@
 import { renderPostsPageComponent } from './components/posts-page-component.js'
 import { tokenId } from './index.js'
+import { renderStatusLikedPost } from './components/liked-post.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -165,7 +166,8 @@ export const likedPost = async ({ tokenId, postId }) => {
             const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `${tokenId}`,
+                    // Убедитесь, что токен передается корректно
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
                 },
             })
 
@@ -175,9 +177,11 @@ export const likedPost = async ({ tokenId, postId }) => {
                 throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
             }
 
-            const data = await response.json() // Ожидаем результат .json()
+            const data = await response.json() // Ожидаем результат в формате JSON
             console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
-            renderStatusLikedPost({data})
+
+            // Обновляем интерфейс, передавая данные в функцию для отображения состояния лайка
+            renderStatusLikedPost(data) // Передаем данные напрямую (без обертки в объект)
             return data // Возвращаем данные
         } else {
             throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
@@ -187,3 +191,39 @@ export const likedPost = async ({ tokenId, postId }) => {
         throw error // Прокидываем ошибку выше
     }
 }
+
+export const dislikedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для дизлайка:', postId); // Дебаг: выводим ID поста
+    console.log('Токен:', tokenId); // Дебаг: выводим токен
+
+    try {
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/dislike`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
+                },
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text(); // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`);
+            }
+
+            const data = await response.json(); // Ожидаем результат в формате JSON
+            console.log('Ответ от сервера:', data); // Выводим полученные данные в консоль
+
+            // Проверяем, есть ли данные о посте
+            if (data && data.post) {
+                return data; // Возвращаем данные, если они корректные
+            } else {
+                throw new Error('Неверная структура данных'); // Если данных нет, выбрасываем ошибку
+            }
+        } else {
+            throw new Error('Token или ID поста отсутствует'); // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при дизлайке поста:', error);
+        throw error; // Прокидываем ошибку выше
+    }
+};

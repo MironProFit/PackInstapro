@@ -11,6 +11,7 @@
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   addPost: () => (/* binding */ addPost),
+/* harmony export */   dislikedPost: () => (/* binding */ dislikedPost),
 /* harmony export */   getAllPosts: () => (/* binding */ getAllPosts),
 /* harmony export */   getPosts: () => (/* binding */ getPosts),
 /* harmony export */   likedPost: () => (/* binding */ likedPost),
@@ -21,6 +22,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./index.js */ "./instapro/index.js");
+/* harmony import */ var _components_liked_post_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/liked-post.js */ "./instapro/components/liked-post.js");
+
 
 
 
@@ -188,7 +191,8 @@ const likedPost = async ({ tokenId, postId }) => {
             const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
                 method: 'POST',
                 headers: {
-                    Authorization: `${tokenId}`,
+                    // Убедитесь, что токен передается корректно
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
                 },
             })
 
@@ -198,9 +202,11 @@ const likedPost = async ({ tokenId, postId }) => {
                 throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
             }
 
-            const data = await response.json() // Ожидаем результат .json()
+            const data = await response.json() // Ожидаем результат в формате JSON
             console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
-            renderStatusLikedPost({data})
+
+            // Обновляем интерфейс, передавая данные в функцию для отображения состояния лайка
+            ;(0,_components_liked_post_js__WEBPACK_IMPORTED_MODULE_2__.renderStatusLikedPost)(data) // Передаем данные напрямую (без обертки в объект)
             return data // Возвращаем данные
         } else {
             throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
@@ -210,6 +216,42 @@ const likedPost = async ({ tokenId, postId }) => {
         throw error // Прокидываем ошибку выше
     }
 }
+
+const dislikedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для дизлайка:', postId); // Дебаг: выводим ID поста
+    console.log('Токен:', tokenId); // Дебаг: выводим токен
+
+    try {
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/dislike`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
+                },
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text(); // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`);
+            }
+
+            const data = await response.json(); // Ожидаем результат в формате JSON
+            console.log('Ответ от сервера:', data); // Выводим полученные данные в консоль
+
+            // Проверяем, есть ли данные о посте
+            if (data && data.post) {
+                return data; // Возвращаем данные, если они корректные
+            } else {
+                throw new Error('Неверная структура данных'); // Если данных нет, выбрасываем ошибку
+            }
+        } else {
+            throw new Error('Token или ID поста отсутствует'); // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при дизлайке поста:', error);
+        throw error; // Прокидываем ошибку выше
+    }
+};
 
 
 /***/ }),
@@ -585,33 +627,79 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
-
-
+ // Импортируем функции для работы с API
+ // Импортируем токен пользователя
 
 const statusLikedPost = () => {
+    const likeButtons = document.querySelectorAll('.like-button') // Находим все кнопки лайка
+
     console.log('Запуск функции отслеживания лайка')
-    const likeButtons = document.querySelectorAll('.like-button')
+
     likeButtons.forEach((button) => {
         button.addEventListener('click', async (e) => {
-            const postId = e.currentTarget.getAttribute('data-post-id')
+            const postId = e.currentTarget.getAttribute('data-post-id') // Получаем ID поста
+            const img = button.querySelector('img') // Получаем изображение внутри кнопки
+
+            // Проверяем текущее состояние лайка
+            const isLiked = img.src.includes('like-active.svg') // Если изображение активного лайка, значит пост лайкнут
 
             try {
-                // Отправляем запрос на лайк поста
-                const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+                let result
+                if (isLiked) {
+                    // Если пост лайкнут, снимаем лайк
+                    result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.dislikedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+                } else {
+                    // Если пост не лайкнут, ставим лайк
+                    result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+                }
 
-                // Обновляем текст количества лайков
-                const likesText = e.currentTarget.nextElementSibling.querySelector('strong')
-                likesText.textContent = result.post.likes.length // Обновляем количество лайков
+                // Обновляем интерфейс
+                renderStatusLikedPost(result) // Обновляем состояние
             } catch (error) {
-                console.error('Ошибка при лайке поста:', error)
+                console.error('Ошибка при обработке лайка/дизлайка поста:', error)
             }
         })
     })
 }
 
-const renderStatusLikedPost = ({data}) => {
-    console.log(data);
-}
+const renderStatusLikedPost = (data) => {
+    // Проверяем, что данные корректные
+    if (!data || !data.post) {
+        console.error('Неверная структура данных для обновления статуса лайка:', data);
+        return; // Выходим из функции, если данные неверные
+    }
+
+    const buttonEl = document.querySelector(`[data-post-id='${data.post.id}']`);
+
+    if (!buttonEl) {
+        console.error(`Кнопка лайка с ID ${data.post.id} не найдена`);
+        return; // Выходим из функции, если кнопка не найдена
+    }
+
+    const img = buttonEl.querySelector('img');
+
+    if (img) {
+        img.src = data.post.isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg';
+    } else {
+        console.error('Изображение внутри кнопки лайка не найдено');
+    }
+
+    const likesTextElement = buttonEl.nextElementSibling; // Получаем следующий элемент
+
+    if (likesTextElement) {
+        const likesText = likesTextElement.querySelector('strong');
+
+        if (likesText) {
+            likesText.textContent = data.post.likes.length; // Обновляем количество лайков
+        } else {
+            console.error('Элемент <strong> для количества лайков не найден');
+        }
+    } else {
+        console.error('Элемент для обновления количества лайков не найден');
+    }
+
+    console.log(data.post.isLiked); // Для отладки
+};
 
 
 /***/ }),
