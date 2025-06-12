@@ -1,6 +1,5 @@
 import { renderPostsPageComponent } from './components/posts-page-component.js'
-import { ADD_POSTS_PAGE } from './routes.js'
-// import { uploadImage} from '../api.js'
+import { tokenId } from './index.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -58,14 +57,14 @@ export const addPost = async ({ token, description, urlLoadingImage }) => {
     try {
         // Проверяем, что изображение было загружено
         if (urlLoadingImage && urlLoadingImage.fileUrl) {
-            const newImageUrl = urlLoadingImage.fileUrl; // Получаем URL загруженного изображения
+            const newImageUrl = urlLoadingImage.fileUrl // Получаем URL загруженного изображения
 
-            console.log('Загруженный URL изображения:', newImageUrl); // Логируем URL загруженного изображения
+            console.log('Загруженный URL изображения:', newImageUrl) // Логируем URL загруженного изображения
 
             const post = {
                 description,
                 imageUrl: newImageUrl, // Используем загруженный URL
-            };
+            }
 
             const response = await fetch(postsHost, {
                 method: 'POST',
@@ -73,22 +72,22 @@ export const addPost = async ({ token, description, urlLoadingImage }) => {
                     Authorization: token, // Используем токен для авторизации
                 },
                 body: JSON.stringify(post),
-            });
+            })
 
             if (!response.ok) {
-                throw new Error('Не удалось добавить пост');
+                throw new Error('Не удалось добавить пост')
             }
 
-            return await response.json(); // Возвращаем созданный пост
+            return await response.json() // Возвращаем созданный пост
         } else {
-            console.error('URL загруженного изображения не установлен.');
-            throw new Error('Не выбрано изображение для добавления поста.');
+            console.error('URL загруженного изображения не установлен.')
+            throw new Error('Не выбрано изображение для добавления поста.')
         }
     } catch (error) {
-        console.error('Ошибка при добавлении поста:', error);
-        throw error; // Прокидываем ошибку выше
+        console.error('Ошибка при добавлении поста:', error)
+        throw error // Прокидываем ошибку выше
     }
-};
+}
 
 export function registerUser({ login, password, name, imageUrl }) {
     return fetch(baseHost + '/api/user', {
@@ -154,4 +153,35 @@ export function uploadImage({ file }) {
             console.error('Ошибка при загрузке изображения:', error)
             throw error // Прокидываем ошибку выше
         })
+}
+
+export const likedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для лайка:', postId) // Дебаг: выводим ID поста
+    console.log(tokenId);
+    try {
+        // Проверяем, что токен и ID поста существуют
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${tokenId}`, // Добавляем Bearer перед токеном
+                },
+            })
+
+            // Проверяем успешность ответа
+            if (!response.ok) {
+                const errorMessage = await response.text() // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
+            }
+
+            const data = await response.json() // Ожидаем результат .json()
+            console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+            return data // Возвращаем данные
+        } else {
+            throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при лайке поста:', error)
+        throw error // Прокидываем ошибку выше
+    }
 }

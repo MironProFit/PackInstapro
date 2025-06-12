@@ -1,4 +1,5 @@
-import { getPosts, uploadImage, addPost, urlLoadingImage } from './api.js'
+import { getPosts, addPost, urlLoadingImage } from './api.js'
+import { statusLikedPost } from './components/liked-post.js'
 import { renderAddPostPageComponent } from './components/add-post-page-component.js'
 import { renderAuthPageComponent } from './components/auth-page-component.js'
 import { ADD_POSTS_PAGE, AUTH_PAGE, LOADING_PAGE, POSTS_PAGE, USER_POSTS_PAGE } from './routes.js'
@@ -9,10 +10,12 @@ import { getUserFromLocalStorage, removeUserFromLocalStorage, saveUserToLocalSto
 export let user = getUserFromLocalStorage()
 export let page = null
 export let posts = []
+export let tokenId = ''
 
 const getToken = () => {
     const token = user ? `Bearer ${user.token}` : undefined
     console.log(token)
+    tokenId = token
     return token
 }
 
@@ -99,7 +102,7 @@ const renderApp = () => {
             appEl,
             onAddPostClick: async ({ description }) => {
                 try {
-                    console.log(urlLoadingImage) 
+                    console.log(urlLoadingImage)
                     const token = getToken() // Получаем токен
 
                     // Проверяем, выбран ли файл
@@ -107,7 +110,6 @@ const renderApp = () => {
                         alert('Пожалуйста, выберите файл для загрузки.')
                         return // Не продолжать, если файл не выбран
                     }
-
 
                     const newPost = await addPost({ token, description, urlLoadingImage }) // Передаем urlLoadingImage
                     debugger

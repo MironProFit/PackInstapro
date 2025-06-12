@@ -13,16 +13,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   addPost: () => (/* binding */ addPost),
 /* harmony export */   getAllPosts: () => (/* binding */ getAllPosts),
 /* harmony export */   getPosts: () => (/* binding */ getPosts),
+/* harmony export */   likedPost: () => (/* binding */ likedPost),
 /* harmony export */   loginUser: () => (/* binding */ loginUser),
 /* harmony export */   registerUser: () => (/* binding */ registerUser),
 /* harmony export */   uploadImage: () => (/* binding */ uploadImage),
 /* harmony export */   urlLoadingImage: () => (/* binding */ urlLoadingImage)
 /* harmony export */ });
 /* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
-/* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./index.js */ "./instapro/index.js");
 
 
-// import { uploadImage} from '../api.js'
 
 // Замени на свой, чтобы получить независимый от других набор данных.
 
@@ -80,14 +80,14 @@ const addPost = async ({ token, description, urlLoadingImage }) => {
     try {
         // Проверяем, что изображение было загружено
         if (urlLoadingImage && urlLoadingImage.fileUrl) {
-            const newImageUrl = urlLoadingImage.fileUrl; // Получаем URL загруженного изображения
+            const newImageUrl = urlLoadingImage.fileUrl // Получаем URL загруженного изображения
 
-            console.log('Загруженный URL изображения:', newImageUrl); // Логируем URL загруженного изображения
+            console.log('Загруженный URL изображения:', newImageUrl) // Логируем URL загруженного изображения
 
             const post = {
                 description,
                 imageUrl: newImageUrl, // Используем загруженный URL
-            };
+            }
 
             const response = await fetch(postsHost, {
                 method: 'POST',
@@ -95,22 +95,22 @@ const addPost = async ({ token, description, urlLoadingImage }) => {
                     Authorization: token, // Используем токен для авторизации
                 },
                 body: JSON.stringify(post),
-            });
+            })
 
             if (!response.ok) {
-                throw new Error('Не удалось добавить пост');
+                throw new Error('Не удалось добавить пост')
             }
 
-            return await response.json(); // Возвращаем созданный пост
+            return await response.json() // Возвращаем созданный пост
         } else {
-            console.error('URL загруженного изображения не установлен.');
-            throw new Error('Не выбрано изображение для добавления поста.');
+            console.error('URL загруженного изображения не установлен.')
+            throw new Error('Не выбрано изображение для добавления поста.')
         }
     } catch (error) {
-        console.error('Ошибка при добавлении поста:', error);
-        throw error; // Прокидываем ошибку выше
+        console.error('Ошибка при добавлении поста:', error)
+        throw error // Прокидываем ошибку выше
     }
-};
+}
 
 function registerUser({ login, password, name, imageUrl }) {
     return fetch(baseHost + '/api/user', {
@@ -176,6 +176,37 @@ function uploadImage({ file }) {
             console.error('Ошибка при загрузке изображения:', error)
             throw error // Прокидываем ошибку выше
         })
+}
+
+const likedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для лайка:', postId) // Дебаг: выводим ID поста
+    console.log(tokenId);
+    try {
+        // Проверяем, что токен и ID поста существуют
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${tokenId}`, // Добавляем Bearer перед токеном
+                },
+            })
+
+            // Проверяем успешность ответа
+            if (!response.ok) {
+                const errorMessage = await response.text() // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
+            }
+
+            const data = await response.json() // Ожидаем результат .json()
+            console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+            return data // Возвращаем данные
+        } else {
+            throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при лайке поста:', error)
+        throw error // Прокидываем ошибку выше
+    }
 }
 
 
@@ -539,6 +570,50 @@ function renderHeaderComponent({ element }) {
 
 /***/ }),
 
+/***/ "./instapro/components/liked-post.js":
+/*!*******************************************!*\
+  !*** ./instapro/components/liked-post.js ***!
+  \*******************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   statusLikedPost: () => (/* binding */ statusLikedPost)
+/* harmony export */ });
+/* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
+
+
+
+const statusLikedPost = () => {
+    console.log('Запуск функции отслеживания лайка')
+    console.log(_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId)
+
+    const likeButtons = document.querySelectorAll('.like-button')
+    likeButtons.forEach((button) => {
+        console.log('Кнопка лайка найдена')
+        button.addEventListener('click', async (e) => {
+            if (_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId) {
+                // Проверка на наличие токена
+                const postId = e.currentTarget.getAttribute('data-post-id')
+                console.log('ID поста:', postId)
+
+                try {
+                    const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId,postId }) // Передача объекта
+                    console.log('Лайк успешно отправлен:', result)
+                } catch (error) {
+                    console.error('Ошибка при лайке поста:', error.message)
+                }
+            } else {
+                console.warn('Токен не найден. Лайк не может быть отправлен.')
+            }
+        })
+    })
+}
+
+
+/***/ }),
+
 /***/ "./instapro/components/loading-page-component.js":
 /*!*******************************************************!*\
   !*** ./instapro/components/loading-page-component.js ***!
@@ -605,8 +680,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _header_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./header-component.js */ "./instapro/components/header-component.js");
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
-/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
-/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
+/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
+/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
+/* harmony import */ var _liked_post_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./liked-post.js */ "./instapro/components/liked-post.js");
+
 
 
 
@@ -630,7 +707,7 @@ function renderPostsPageComponent({ appEl }) {
         _index_js__WEBPACK_IMPORTED_MODULE_2__.posts.forEach((post) => {
             const listEl = document.createElement('li')
             listEl.classList.add('post')
-            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_4__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_5__.ru })
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_5__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_6__.ru })
             // console.log(formattedDate)
 
             listEl.innerHTML = `
@@ -661,6 +738,9 @@ function renderPostsPageComponent({ appEl }) {
     }
 
     renderPostsFromApi()
+    document.addEventListener('DOMContentLoaded', () => {
+        ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)() // Вызываем функцию после загрузки DOM
+    })
 
     ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
         element: document.querySelector('.header-container'),
@@ -673,7 +753,9 @@ function renderPostsPageComponent({ appEl }) {
             })
         })
     })
+    ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)()
 }
+
 
 /***/ }),
 
@@ -736,6 +818,8 @@ function renderUploadImageComponent({ element, onImageUrlChange }) {
                   console.error('Ошибка загрузки изображения:', error)
                   labelEl.removeAttribute('disabled')
                   labelEl.textContent = 'Выберите фото'
+                  imageUrl = ''
+
               })
           }
       })
@@ -801,15 +885,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   logout: () => (/* binding */ logout),
 /* harmony export */   page: () => (/* binding */ page),
 /* harmony export */   posts: () => (/* binding */ posts),
+/* harmony export */   tokenId: () => (/* binding */ tokenId),
 /* harmony export */   user: () => (/* binding */ user)
 /* harmony export */ });
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./api.js */ "./instapro/api.js");
-/* harmony import */ var _components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/add-post-page-component.js */ "./instapro/components/add-post-page-component.js");
-/* harmony import */ var _components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/auth-page-component.js */ "./instapro/components/auth-page-component.js");
-/* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
-/* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
-/* harmony import */ var _components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/loading-page-component.js */ "./instapro/components/loading-page-component.js");
-/* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./helpers.js */ "./instapro/helpers.js");
+/* harmony import */ var _components_liked_post_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/liked-post.js */ "./instapro/components/liked-post.js");
+/* harmony import */ var _components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/add-post-page-component.js */ "./instapro/components/add-post-page-component.js");
+/* harmony import */ var _components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/auth-page-component.js */ "./instapro/components/auth-page-component.js");
+/* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
+/* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
+/* harmony import */ var _components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/loading-page-component.js */ "./instapro/components/loading-page-component.js");
+/* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./helpers.js */ "./instapro/helpers.js");
 
 
 
@@ -818,54 +904,57 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-let user = (0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.getUserFromLocalStorage)()
+
+let user = (0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.getUserFromLocalStorage)()
 let page = null
 let posts = []
+let tokenId = ''
 
 const getToken = () => {
     const token = user ? `Bearer ${user.token}` : undefined
     console.log(token)
+    tokenId = token
     return token
 }
 
 const logout = () => {
     user = null
-    ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.removeUserFromLocalStorage)()
-    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+    ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.removeUserFromLocalStorage)()
+    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
 }
 
 /**яя
  * Включает страницу приложения
  */
 const goToPage = (newPage, data) => {
-    if ([_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE].includes(newPage)) {
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE) {
+    if ([_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE].includes(newPage)) {
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE) {
             /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
-            page = user ? _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE : _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE
+            page = user ? _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE : _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE
             console.log('Начало работы')
             return renderApp()
         }
 
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) {
-            page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
+            page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE
             renderApp()
 
             return (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.getPosts)({ token: getToken() })
                 .then((newPosts) => {
-                    page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE
+                    page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE
                     posts = newPosts
                     renderApp()
                 })
                 .catch((error) => {
                     console.error(error)
-                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
                 })
         }
 
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE) {
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE) {
             // @@TODO: реализовать получение постов юзера из API
             console.log('Открываю страницу пользователя: ', data.userId)
-            page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE
+            page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE
             posts = []
             return renderApp()
         }
@@ -882,36 +971,36 @@ const goToPage = (newPage, data) => {
 const renderApp = () => {
     console.log('запуск рендера')
     const appEl = document.getElementById('app')
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE) {
-        return (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderLoadingPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE) {
+        return (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__.renderLoadingPageComponent)({
             appEl,
             user,
             goToPage,
         })
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE) {
-        return (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAuthPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE) {
+        return (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__.renderAuthPageComponent)({
             appEl,
             setUser: (newUser) => {
                 user = newUser
-                ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.saveUserToLocalStorage)(user)
-                goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+                ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.saveUserToLocalStorage)(user)
+                goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
             },
             user,
             goToPage,
         })
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE) {
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE) {
         console.log(page)
         console.log('Перешли на страницу загрузки поста')
 
-        return (0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_1__.renderAddPostPageComponent)({
+        return (0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAddPostPageComponent)({
             appEl,
             onAddPostClick: async ({ description }) => {
                 try {
-                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage) 
+                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage)
                     const token = getToken() // Получаем токен
 
                     // Проверяем, выбран ли файл
@@ -920,11 +1009,10 @@ const renderApp = () => {
                         return // Не продолжать, если файл не выбран
                     }
 
-
                     const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, urlLoadingImage: _api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage }) // Передаем urlLoadingImage
                     debugger
                     posts.push(newPost) // Добавляем новый пост в массив постов
-                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) // Переходим на страницу постов
+                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) // Переходим на страницу постов
                     console.log('Добавляю пост')
                 } catch (err) {
                     console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
@@ -934,20 +1022,20 @@ const renderApp = () => {
         })
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) {
-        return (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_4__.renderPostsPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
+        return (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderPostsPageComponent)({
             appEl,
         })
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE) {
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE) {
         // @TODO: реализовать страницу с фотографиями отдельного пользвателя
         appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
         return
     }
 }
 
-goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
 
 
 /***/ }),

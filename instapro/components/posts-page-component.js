@@ -4,6 +4,7 @@ import { posts, goToPage } from '../index.js'
 import { getAllPosts } from '../api.js'
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import { statusLikedPost } from './liked-post.js'
 
 export function renderPostsPageComponent({ appEl }) {
     // console.log(appEl);
@@ -52,6 +53,9 @@ export function renderPostsPageComponent({ appEl }) {
     }
 
     renderPostsFromApi()
+    document.addEventListener('DOMContentLoaded', () => {
+        statusLikedPost() // Вызываем функцию после загрузки DOM
+    })
 
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
@@ -64,4 +68,5 @@ export function renderPostsPageComponent({ appEl }) {
             })
         })
     })
+    statusLikedPost()
 }
