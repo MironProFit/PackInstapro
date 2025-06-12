@@ -46,6 +46,8 @@ export function renderUploadImageComponent({ element, onImageUrlChange }) {
                   console.error('Ошибка загрузки изображения:', error)
                   labelEl.removeAttribute('disabled')
                   labelEl.textContent = 'Выберите фото'
+                  imageUrl = ''
+
               })
           }
       })
