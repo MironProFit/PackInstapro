@@ -1,17 +1,15 @@
 import { USER_POSTS_PAGE } from '../routes.js'
 import { renderHeaderComponent } from './header-component.js'
-import { posts, goToPage, user } from '../index.js'
-import { getAllPosts, getPostsUsers, getUserData } from '../api.js'
+import { posts, user, goToPage } from '../index.js'
+import { getPostsUsers, deletePost } from '../api.js' // Убедитесь, что импортируете getPostsUsers
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { statusLikedPost } from './liked-post.js'
 
 export function renderPostsPageComponent({ appEl }) {
-    // console.log(appEl);
-    const appHtml = `
-        <div class="page-container">
-            <div class="header-container"></div>
-            <ul class="posts"></ul>
+    const appHtml = `<div class='page-container'>
+            <div class='header-container'></div>
+            <ul class='posts'></ul>
         </div>
     `
 
@@ -19,100 +17,124 @@ export function renderPostsPageComponent({ appEl }) {
 
     const renderPostsFromApi = () => {
         const containerPosts = document.querySelector('.posts')
+        containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
+
         posts.forEach((post) => {
-            console.log(post)
             const listEl = document.createElement('li')
             listEl.classList.add('post')
             const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
-            // console.log(formattedDate)
 
             listEl.innerHTML = `
-                <div class="post-header" data-user-id="${post.user.id}">
-                    <img src="${post.user.imageUrl}" class="post-header__user-image">
-                    <p class="post-header__user-name">${post.user.name}</p>
+                <div class='post-header' data-user-id='${post.user.id}'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
+                    <p class='post-header__user-name'>${post.user.name}</p>
                 </div>
-                <div class="post-image-container">
-                    <img class="post-image" src="${post.imageUrl}">
+                <div class='post-image-container'>
+                    <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
                 </div>
-                <div class="post-likes">
-                    <button data-post-id="${post.id}" class="like-button">
-                        <img src="./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg">
+                <div class='post-likes'>
+                    <button data-post-id='${post.id}' class='like-button'>
+                        <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg' alt='Лайк'>
                     </button>
-                    <p class="post-likes-text">
+                    <p class='post-likes-text'>
                         Нравится: <strong>${post.likes.length}</strong>
                     </p>
                 </div>
-                <p class="post-text">
-                    <span class="user-name">${post.user.name}</span>
-                    ${post.description}
-                </p>
-                <p class="post-date">${formattedDate}</p>
+                <p class='post-text'>${post.description}</p>
+                <p class='post-date'>${formattedDate}</p>
+                
             `
-            // console.log(post.createdAt)
+
+            // Проверяем, является ли текущий пользователь автором поста
+            console.log(post.user.id)
+            console.log(user.id)
+            if (post.user.id === user.id) {
+                // Добавляем кнопку удаления только для своих постов
+                const deleteButton = document.createElement('button')
+                deleteButton.classList.add('button-delete')
+                deleteButton.dataset.postId = post.id
+                deleteButton.textContent = 'Удалить'
+
+                // Добавляем обработчик события для кнопки удаления
+                deleteButton.addEventListener('click', async () => {
+                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+                    if (confirmDelete) {
+                        const result = await deletePost(post.id) // Функция для удаления поста
+                        if (result) {
+                            listEl.remove() // Удаляем элемент поста из DOM
+                            console.log('Пост удален')
+                        } else {
+                            console.error('Ошибка при удалении поста')
+                        }
+                    }
+                })
+
+                listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+            }
+
+            // Добавляем элемент поста в контейнер
             containerPosts.appendChild(listEl)
         })
     }
 
     renderPostsFromApi()
-    document.addEventListener('DOMContentLoaded', () => {
-        statusLikedPost() // Вызываем функцию после загрузки DOM
-    })
 
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
     })
 
-    const postsContainer = document.querySelector('.posts') //  Предполагаем, что посты находятся в .posts
+    // Обработчик для перехода к постам пользователя
+    const postsContainer = document.querySelector('.posts')
     if (postsContainer) {
-        console.log(postsContainer)
         postsContainer.addEventListener('click', (event) => {
             const userEl = event.target.closest('.post-header') // Находим ближайший .post-header
             if (userEl) {
                 const userId = userEl.dataset.userId
                 if (userId) {
                     goToPage(USER_POSTS_PAGE, { userId: userId })
-                    console.log(userId)
+                    console.log('Переход к постам пользователя с ID:', userId)
                 }
             }
         })
     }
 
+    // Обновляем состояние лайков
     statusLikedPost()
 }
+
 export function renderUserPostsPageComponent({ appEl, userId }) {
-    console.log('Рендер постов отдельного пользователя');
-    console.log(userId);
+    console.log('Рендер постов отдельного пользователя')
+    console.log(userId)
 
     const renderPostsFromApi = async () => {
-        const containerPosts = document.querySelector('.posts'); // Получаем контейнер постов
-        console.log(containerPosts);
+        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
 
         // Получаем посты пользователя
-        const response = await getPostsUsers(userId); // Получаем посты
-        console.log({ response });
+        const response = await getPostsUsers(userId) // Получаем посты
+        console.log({ response })
 
-        const posts = response.posts; // Извлекаем массив постов
-        console.log({ posts });
+        const posts = response.posts // Извлекаем массив постов
+        console.log({ posts })
 
         // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
-            containerPosts.innerHTML = `<p>Посты не найдены.</p>`;
-            return;
+            containerPosts.innerHTML = `<p>Посты не найдены.</p>`
+            return
         }
 
         // Очищаем контейнер перед добавлением новых постов
-        containerPosts.innerHTML = '';
+        containerPosts.innerHTML = ''
 
         posts.forEach((post) => {
-            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru });
+            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
 
-            const listEl = document.createElement('li');
-            listEl.classList.add('post');
+            const listEl = document.createElement('li')
+            listEl.classList.add('post')
 
             listEl.innerHTML = `
-                <div class='post-header' data-user-id='${post.user.id}' class='post-header'>
-                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}' data-user-id='${post.user.id}'>
-                    <p class='post-header__user-name' data-user-id='${post.user.id}'>${post.user.name}</p>
+                <div class='post-header' data-user-id='${post.user.id}'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
+                    <p class='post-header__user-name'>${post.user.name}</p>
                 </div>
                 <div class='post-image-container'>
                     <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
@@ -129,28 +151,34 @@ export function renderUserPostsPageComponent({ appEl, userId }) {
                     ${post.description}
                 </p>
                 <p class='post-date'>${formattedDate}</p>
-            `;
+                <button class='button-delete button' data-post-id='${post.id}'>Удалить</button>
+            `
 
-            // Добавляем обработчик событий на имя пользователя и аватарку
-            const userNameElement = listEl.querySelector('.post-header__user-name');
-            const userImageElement = listEl.querySelector('.post-header__user-image');
+            // Добавляем обработчик события для кнопки удаления
+            const deleteButton = listEl.querySelector('.button-delete')
+            deleteButton.addEventListener('click', async () => {
+                const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+                if (confirmDelete) {
+                    const result = await deletePost(post.id) // Удаление поста
+                    if (result) {
+                        // Успешное удаление, обновляем интерфейс
+                        listEl.remove() // Удаляем элемент поста из DOM
+                        console.log('Пост удален')
+                    } else {
+                        console.error('Ошибка при удалении поста')
+                    }
+                }
+            })
 
-            userNameElement.addEventListener('click', () => {
-                renderUserPostsPageComponent({ appEl, userId: post.user.id });
-            });
-
-            userImageElement.addEventListener('click', () => {
-                renderUserPostsPageComponent({ appEl, userId: post.user.id });
-            });
-
-            containerPosts.appendChild(listEl); // Добавляем пост в контейнер
-        });
-    };
+            // Добавляем элемент поста в контейнер
+            containerPosts.appendChild(listEl)
+        })
+    }
 
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
-    });
+    })
 
-    renderPostsFromApi(); // Вызываем функцию рендеринга
-    statusLikedPost(); // Обновляем состояние лайков
+    renderPostsFromApi() // Вызываем функцию рендеринга
+    statusLikedPost() // Обновляем состояние лайков
 }

@@ -118,6 +118,7 @@ export function loginUser({ login, password }) {
         if (response.status === 400) {
             throw new Error('Неверный логин или пароль')
         }
+        console.log(response.json());
         return response.json()
     })
 }
@@ -249,3 +250,26 @@ export const getPostsUsers = async (userId) => {
         return null // В случае ошибки возвращаем null
     }
 }
+
+export const deletePost = async (postId) => {
+    console.log(postId);
+    try {
+        const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `${tokenId}`, // Убедитесь, что добавляете токен авторизации
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log(result);
+        return result.result === 'ok'; // Возвращаем true, если удаление прошло успешно
+    } catch (error) {
+        console.error('Ошибка при удалении поста:', error);
+        return false; // В случае ошибки возвращаем false
+    }
+};
