@@ -137,17 +137,23 @@ function registerUser({ login, password, name, imageUrl }) {
 function loginUser({ login, password }) {
     return fetch(baseHost + '/api/user/login', {
         method: 'POST',
+            'Content-Type': 'application/json', // Убедитесь, что заголовок установлен
+        headers: {},
         body: JSON.stringify({
             login,
             password,
         }),
-    }).then((response) => {
-        if (response.status === 400) {
-            throw new Error('Неверный логин или пароль')
-        }
-        console.log(response.json());
-        return response.json()
     })
+        .then((response) => {
+            if (response.status === 400) {
+                throw new Error('Неверный логин или пароль')
+            }
+            return response.json() // Возвращаем результат json
+        })
+        .then((data) => {
+            console.log(data) // Логируем данные после успешного парсинга
+            return data // Возвращаем данные
+        })
 }
 
 function uploadImage({ file }) {
@@ -279,27 +285,28 @@ const getPostsUsers = async (userId) => {
 }
 
 const deletePost = async (postId) => {
-    console.log(postId);
+    console.log(postId)
     try {
         const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `${_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId}`, // Убедитесь, что добавляете токен авторизации
+                Authorization: `${_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId}`, // Убедитесь, что добавляете токен авторизации
             },
-        });
+        })
 
         if (!response.ok) {
-            throw new Error(`Ошибка: ${response.status}`);
+            throw new Error(`Ошибка: ${response.status}`)
         }
 
-        const result = await response.json();
-        console.log(result);
-        return result.result === 'ok'; // Возвращаем true, если удаление прошло успешно
+        const result = await response.json()
+        console.log(result)
+        return result.result === 'ok' // Возвращаем true, если удаление прошло успешно
     } catch (error) {
-        console.error('Ошибка при удалении поста:', error);
-        return false; // В случае ошибки возвращаем false
+        console.error('Ошибка при удалении поста:', error)
+        return false // В случае ошибки возвращаем false
     }
-};
+}
+
 
 /***/ }),
 
@@ -875,31 +882,43 @@ function renderPostsPageComponent({ appEl }) {
             `
 
             // Проверяем, является ли текущий пользователь автором поста
-            console.log(post.user.id)
-            console.log(_index_js__WEBPACK_IMPORTED_MODULE_2__.user.id)
-            if (post.user.id === _index_js__WEBPACK_IMPORTED_MODULE_2__.user.id) {
-                // Добавляем кнопку удаления только для своих постов
-                const deleteButton = document.createElement('button')
-                deleteButton.classList.add('button-delete')
-                deleteButton.dataset.postId = post.id
-                deleteButton.textContent = 'Удалить'
+            console.log(post.user.id) // ID пользователя, который выложил пост
 
-                // Добавляем обработчик события для кнопки удаления
-                deleteButton.addEventListener('click', async () => {
-                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
-                    if (confirmDelete) {
-                        const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id) // Функция для удаления поста
-                        if (result) {
-                            listEl.remove() // Удаляем элемент поста из DOM
-                            console.log('Пост удален')
-                        } else {
-                            console.error('Ошибка при удалении поста')
-                        }
-                    }
-                })
-
-                listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+            // Получаем данные текущего пользователя из localStorage
+            const storedUserData = localStorage.getItem('user')
+            if (storedUserData) {
+                // Парсим данные из JSON и получаем объект пользователя
+                const currentUser = JSON.parse(storedUserData)
+                const currentUserId = currentUser._id // Получаем ID текущего пользователя
+                console.log('Current User ID:', currentUserId)
             }
+
+            console.log('Stored User Data:', storedUserData) // Логируем данные, сохраненные в localStorage
+            // console.log(user._id)
+            // console.log(post.user.id === user._id);
+            // if (post.user.id === user._id) {
+            //     // Добавляем кнопку удаления только для своих постов
+            //     const deleteButton = document.createElement('button')
+            //     deleteButton.classList.add('button-delete')
+            //     deleteButton.dataset.postId = post.id
+            //     deleteButton.textContent = 'Удалить'
+
+            //     // Добавляем обработчик события для кнопки удаления
+            //     deleteButton.addEventListener('click', async () => {
+            //         const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+            //         if (confirmDelete) {
+            //             const result = await deletePost(post.id) // Функция для удаления поста
+            //             if (result) {
+            //                 listEl.remove() // Удаляем элемент поста из DOM
+            //                 console.log('Пост удален')
+            //             } else {
+            //                 console.error('Ошибка при удалении поста')
+            //             }
+            //         }
+            //     })
+
+            //     listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+            // }
 
             // Добавляем элемент поста в контейнер
             containerPosts.appendChild(listEl)

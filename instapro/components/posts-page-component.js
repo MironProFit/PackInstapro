@@ -46,31 +46,43 @@ export function renderPostsPageComponent({ appEl }) {
             `
 
             // Проверяем, является ли текущий пользователь автором поста
-            console.log(post.user.id)
-            console.log(user.id)
-            if (post.user.id === user.id) {
-                // Добавляем кнопку удаления только для своих постов
-                const deleteButton = document.createElement('button')
-                deleteButton.classList.add('button-delete')
-                deleteButton.dataset.postId = post.id
-                deleteButton.textContent = 'Удалить'
+            console.log(post.user.id) // ID пользователя, который выложил пост
 
-                // Добавляем обработчик события для кнопки удаления
-                deleteButton.addEventListener('click', async () => {
-                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
-                    if (confirmDelete) {
-                        const result = await deletePost(post.id) // Функция для удаления поста
-                        if (result) {
-                            listEl.remove() // Удаляем элемент поста из DOM
-                            console.log('Пост удален')
-                        } else {
-                            console.error('Ошибка при удалении поста')
-                        }
-                    }
-                })
-
-                listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+            // Получаем данные текущего пользователя из localStorage
+            const storedUserData = localStorage.getItem('user')
+            if (storedUserData) {
+                // Парсим данные из JSON и получаем объект пользователя
+                const currentUser = JSON.parse(storedUserData)
+                const currentUserId = currentUser._id // Получаем ID текущего пользователя
+                console.log('Current User ID:', currentUserId)
             }
+
+            console.log('Stored User Data:', storedUserData) // Логируем данные, сохраненные в localStorage
+            // console.log(user._id)
+            // console.log(post.user.id === user._id);
+            // if (post.user.id === user._id) {
+            //     // Добавляем кнопку удаления только для своих постов
+            //     const deleteButton = document.createElement('button')
+            //     deleteButton.classList.add('button-delete')
+            //     deleteButton.dataset.postId = post.id
+            //     deleteButton.textContent = 'Удалить'
+
+            //     // Добавляем обработчик события для кнопки удаления
+            //     deleteButton.addEventListener('click', async () => {
+            //         const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+            //         if (confirmDelete) {
+            //             const result = await deletePost(post.id) // Функция для удаления поста
+            //             if (result) {
+            //                 listEl.remove() // Удаляем элемент поста из DOM
+            //                 console.log('Пост удален')
+            //             } else {
+            //                 console.error('Ошибка при удалении поста')
+            //             }
+            //         }
+            //     })
+
+            //     listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+            // }
 
             // Добавляем элемент поста в контейнер
             containerPosts.appendChild(listEl)

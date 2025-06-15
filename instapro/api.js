@@ -110,17 +110,23 @@ export function registerUser({ login, password, name, imageUrl }) {
 export function loginUser({ login, password }) {
     return fetch(baseHost + '/api/user/login', {
         method: 'POST',
+            'Content-Type': 'application/json', // Убедитесь, что заголовок установлен
+        headers: {},
         body: JSON.stringify({
             login,
             password,
         }),
-    }).then((response) => {
-        if (response.status === 400) {
-            throw new Error('Неверный логин или пароль')
-        }
-        console.log(response.json());
-        return response.json()
     })
+        .then((response) => {
+            if (response.status === 400) {
+                throw new Error('Неверный логин или пароль')
+            }
+            return response.json() // Возвращаем результат json
+        })
+        .then((data) => {
+            console.log(data) // Логируем данные после успешного парсинга
+            return data // Возвращаем данные
+        })
 }
 
 export function uploadImage({ file }) {
@@ -252,24 +258,24 @@ export const getPostsUsers = async (userId) => {
 }
 
 export const deletePost = async (postId) => {
-    console.log(postId);
+    console.log(postId)
     try {
         const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}`, {
             method: 'DELETE',
             headers: {
-                'Authorization': `${tokenId}`, // Убедитесь, что добавляете токен авторизации
+                Authorization: `${tokenId}`, // Убедитесь, что добавляете токен авторизации
             },
-        });
+        })
 
         if (!response.ok) {
-            throw new Error(`Ошибка: ${response.status}`);
+            throw new Error(`Ошибка: ${response.status}`)
         }
 
-        const result = await response.json();
-        console.log(result);
-        return result.result === 'ok'; // Возвращаем true, если удаление прошло успешно
+        const result = await response.json()
+        console.log(result)
+        return result.result === 'ok' // Возвращаем true, если удаление прошло успешно
     } catch (error) {
-        console.error('Ошибка при удалении поста:', error);
-        return false; // В случае ошибки возвращаем false
+        console.error('Ошибка при удалении поста:', error)
+        return false // В случае ошибки возвращаем false
     }
-};
+}
