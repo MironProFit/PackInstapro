@@ -193,8 +193,8 @@ export const likedPost = async ({ tokenId, postId }) => {
 }
 
 export const dislikedPost = async ({ tokenId, postId }) => {
-    console.log('ID поста для дизлайка:', postId); // Дебаг: выводим ID поста
-    console.log('Токен:', tokenId); // Дебаг: выводим токен
+    console.log('ID поста для дизлайка:', postId) // Дебаг: выводим ID поста
+    console.log('Токен:', tokenId) // Дебаг: выводим токен
 
     try {
         if (tokenId && postId) {
@@ -203,27 +203,49 @@ export const dislikedPost = async ({ tokenId, postId }) => {
                 headers: {
                     Authorization: `${tokenId}`, // Токен без "Bearer"
                 },
-            });
+            })
 
             if (!response.ok) {
-                const errorMessage = await response.text(); // Получаем текст ошибки
-                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`);
+                const errorMessage = await response.text() // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
             }
 
-            const data = await response.json(); // Ожидаем результат в формате JSON
-            console.log('Ответ от сервера:', data); // Выводим полученные данные в консоль
+            const data = await response.json() // Ожидаем результат в формате JSON
+            console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
 
             // Проверяем, есть ли данные о посте
             if (data && data.post) {
-                return data; // Возвращаем данные, если они корректные
+                return data // Возвращаем данные, если они корректные
             } else {
-                throw new Error('Неверная структура данных'); // Если данных нет, выбрасываем ошибку
+                throw new Error('Неверная структура данных') // Если данных нет, выбрасываем ошибку
             }
         } else {
-            throw new Error('Token или ID поста отсутствует'); // Пользовательская ошибка
+            throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
         }
     } catch (error) {
-        console.error('Ошибка при дизлайке поста:', error);
-        throw error; // Прокидываем ошибку выше
+        console.error('Ошибка при дизлайке поста:', error)
+        throw error // Прокидываем ошибку выше
     }
-};
+}
+export const getPostsUsers = async (userId) => {
+    console.log(userId)
+    console.log('Получение постов от сервера')
+    try {
+        const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/user-posts/${userId}`, {
+            method: 'GET',
+        })
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`)
+        }
+
+        // Получение данных в формате JSON
+        const posts = await response.json()
+        console.log('Полученные посты:', posts) // Логируем ответ от сервера
+
+        return posts // Возвращаем посты
+    } catch (error) {
+        console.error('Ошибка при получении постов пользователя:', error)
+        return null // В случае ошибки возвращаем null
+    }
+}

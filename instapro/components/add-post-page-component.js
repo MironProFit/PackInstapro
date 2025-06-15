@@ -25,6 +25,7 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     <button class="button" id="add-button">Отправить</button>
     </div>
 
+
    
 </div>
 `
@@ -34,41 +35,46 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         renderHeaderComponent({
             element: document.querySelector('.header-container'),
         })
-        const imageDescription = document.getElementById('image-description')
-        // const fileInputElement = document.getElementById('file-upload-input')
-        const previewContainer = document.getElementById('preview-container')
+        try {
+            const imageDescription = document.getElementById('image-description')
+            // const fileInputElement = document.getElementById('file-upload-input')
+            const previewContainer = document.getElementById('preview-container')
 
-        const validation = () => {
-            if (!imageUrl && imageDescription.value.trim() !== '') {
-                return alert('Заполните обязательные поля')
+            const validation = () => {
+                if (!imageUrl && imageDescription.value.trim() !== '') {
+                    return alert('Заполните обязательные поля')
+                }
             }
-        }
 
-        if (previewContainer) {
-            renderUploadImageComponent({
-                element: previewContainer,
-                onImageUrlChange(newImgUrl) {
-                    imageUrl = newImgUrl
-                },
+            if (previewContainer) {
+                renderUploadImageComponent({
+                    element: previewContainer,
+                    onImageUrlChange(newImgUrl) {
+                        imageUrl = newImgUrl
+                    },
+                })
+            }
+
+            document.getElementById('add-button').addEventListener('click', () => {
+                // if (imageDescription.value === '' || !imageUrl) {
+                //     alert('Заполните обязательные поля')
+                //     return
+                // } else {
+                validation()
+                onAddPostClick({
+                    description: imageDescription.value, // Здесь можно добавить описание, если нужно
+
+                    imageUrl: imageUrl,
+                    // Используем сохраненный URL изображения
+                })
+                console.log(imageDescription.value)
+                console.log('кнопка нажата запуск onAddPostClick')
+                // }
             })
+        } catch (error) {
+            console.error('ошибка:', message)
+            renderAddPostPageComponent()
         }
-
-        document.getElementById('add-button').addEventListener('click', () => {
-            // if (imageDescription.value === '' || !imageUrl) {
-            //     alert('Заполните обязательные поля')
-            //     return
-            // } else {
-            validation()
-            onAddPostClick({
-                description: imageDescription.value, // Здесь можно добавить описание, если нужно
-
-                imageUrl: imageUrl,
-                // Используем сохраненный URL изображения
-            })
-            console.log(imageDescription.value)
-            console.log('кнопка нажата запуск onAddPostClick')
-            // }
-        })
     }
 
     render()

@@ -1,9 +1,9 @@
-import { getPosts, addPost, urlLoadingImage } from './api.js'
+import { getPosts, addPost, urlLoadingImage, getPostsUsers } from './api.js'
 import { statusLikedPost } from './components/liked-post.js'
 import { renderAddPostPageComponent } from './components/add-post-page-component.js'
 import { renderAuthPageComponent } from './components/auth-page-component.js'
 import { ADD_POSTS_PAGE, AUTH_PAGE, LOADING_PAGE, POSTS_PAGE, USER_POSTS_PAGE } from './routes.js'
-import { renderPostsPageComponent } from './components/posts-page-component.js'
+import { renderPostsPageComponent, renderUserPostsPageComponent } from './components/posts-page-component.js'
 import { renderLoadingPageComponent } from './components/loading-page-component.js'
 import { getUserFromLocalStorage, removeUserFromLocalStorage, saveUserToLocalStorage } from './helpers.js'
 
@@ -54,11 +54,19 @@ export const goToPage = (newPage, data) => {
         }
 
         if (newPage === USER_POSTS_PAGE) {
-            // @@TODO: реализовать получение постов юзера из API
-            console.log('Открываю страницу пользователя: ', data.userId)
-            page = USER_POSTS_PAGE
-            posts = []
-            return renderApp()
+            const userId = data.userId // Извлекаем userId
+            if (userId) {
+                console.log(userId)
+                try {
+                    const appEl = document.getElementById('app')
+                    renderUserPostsPageComponent({ appEl, userId }) // Передаем appEl и userId
+                } catch (error) {
+                    console.error('Ошибка при рендеринге страницы постов пользователя:', error)
+                }
+            } else {
+                console.error('Не указан userId')
+            }
+            return // Завершаем выполнение функции
         }
 
         page = newPage
@@ -95,33 +103,33 @@ const renderApp = () => {
     }
 
     if (page === ADD_POSTS_PAGE) {
-        console.log(page)
-        console.log('Перешли на страницу загрузки поста')
-
+        console.log(page);
+        console.log('Перешли на страницу загрузки поста');
+    
         return renderAddPostPageComponent({
             appEl,
             onAddPostClick: async ({ description }) => {
                 try {
-                    console.log(urlLoadingImage)
-                    const token = getToken() // Получаем токен
-
+                    console.log(urlLoadingImage);
+                    const token = getToken(); // Получаем токен
+    
                     // Проверяем, выбран ли файл
-                    if (!urlLoadingImage && !urlLoadingImage.fileUrl) {
-                        alert('Пожалуйста, выберите файл для загрузки.')
-                        return // Не продолжать, если файл не выбран
+                    if (!urlLoadingImage || !urlLoadingImage.fileUrl) {
+                        alert('Пожалуйста, выберите файл для загрузки.');
+                        return; // Не продолжать, если файл не выбран
                     }
-
-                    const newPost = await addPost({ token, description, urlLoadingImage }) // Передаем urlLoadingImage
-                    debugger
-                    posts.push(newPost) // Добавляем новый пост в массив постов
-                    goToPage(POSTS_PAGE) // Переходим на страницу постов
-                    console.log('Добавляю пост')
+    
+                    // Добавляем новый пост
+                    const newPost = await addPost({ token, description, urlLoadingImage });
+                    posts.push(newPost); // Добавляем новый пост в массив постов
+                    goToPage(POSTS_PAGE); // Переходим на страницу постов
+                    console.log('Добавляю пост');
                 } catch (err) {
-                    console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
-                    alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю
+                    console.error('Ошибка при добавлении поста:', err); // Логируем ошибку
+                    alert('Не удалось добавить пост. Попробуйте еще раз.'); // Отображаем сообщение пользователю
                 }
             },
-        })
+        });
     }
 
     if (page === POSTS_PAGE) {
@@ -131,8 +139,9 @@ const renderApp = () => {
     }
 
     if (page === USER_POSTS_PAGE) {
+        renderUserPostsPageComponent({ appEl })
         // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-        appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
+        // appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
         return
     }
 }
