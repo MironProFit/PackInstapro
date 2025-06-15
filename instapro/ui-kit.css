@@ -31,7 +31,7 @@ body {
   overflow: auto;
   font-size: 14px;
   line-height: 18px;
-  background: rgb(62, 62, 62);
+  /* background: rgb(62, 62, 62); */
 }
 
 /* скрывает скролбары в chrome */
