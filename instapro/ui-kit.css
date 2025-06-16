@@ -65,7 +65,54 @@ body.dark-mode {
     background-color: #474646; /* Цвет для темного режима */
 }
 
+/* Модальное окно  */
+.modal {
+  display: none; /* Скрыто по умолчанию */
+  position: fixed; /* Зафиксированное положение */
+  z-index: 1000; /* На переднем плане */
+  left: 0;
+  top: 0;
+  width: 100%; /* Полная ширина */
+  height: 100%; /* Полная высота */
+  overflow: auto; /* Включаем прокрутку, если нужно */
+  background-color: rgba(0, 0, 0, 0.8); /* Черный фон с прозрачностью */
+}
 
+.modal-content {
+  position: absolute; /* Изменено на absolute для центрирования */
+  top: 50%; /* Позиционируем по вертикали */
+  left: 50%; /* Позиционируем по горизонтали */
+  transform: translate(-50%, -50%); /* Центрируем содержимое */
+  max-width: 100%; /* Максимальная ширина изображения */
+}
+
+.modal img {
+  width: 100%; /* Ширина изображения подстраивается под ширину контейнера */
+  height: auto; /* Автоматическая высота для сохранения пропорций */
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background-color: #fff;
+  color: #000; /* Цвет текста белый */
+  font-size: 30px; /* Размер шрифта */
+  font-weight: bold; /* Жирный шрифт */
+  border: 2px solid #000; /* Без рамки */
+  border-radius: 10px;
+  cursor: pointer; /* Курсор в виде указателя */
+  transition: 0.3s; /* Плавный переход цвета */
+}
+
+.close:hover {
+  background-color: #000;
+
+
+  color:#fff; /* Изменение цвета при наведении */
+}
+
+/*  */
 
 /* Свитчер режима  */
 .theme-switcher {
