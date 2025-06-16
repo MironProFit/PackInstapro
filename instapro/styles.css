@@ -94,6 +94,7 @@
     padding-left: 0px;
     padding-bottom: 5px;
     cursor: pointer;
+    transition: transform 0.3s; /* Плавный переход для изменения размера */
 }
 
 .user-name {

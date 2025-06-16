@@ -199,6 +199,8 @@ export const likedPost = async ({ tokenId, postId }) => {
     }
 }
 
+
+
 export const dislikedPost = async ({ tokenId, postId }) => {
     console.log('ID поста для дизлайка:', postId) // Дебаг: выводим ID поста
     console.log('Токен:', tokenId) // Дебаг: выводим токен
@@ -234,6 +236,8 @@ export const dislikedPost = async ({ tokenId, postId }) => {
         throw error // Прокидываем ошибку выше
     }
 }
+
+
 export const getPostsUsers = async (userId) => {
     console.log(userId)
     console.log('Получение постов от сервера')

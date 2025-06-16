@@ -16,6 +16,10 @@ export const statusLikedPost = () => {
 
             try {
                 let result
+
+                button.classList.add('loading')
+                button.disable = true
+
                 if (isLiked) {
                     // Если пост лайкнут, снимаем лайк
                     result = await dislikedPost({ tokenId, postId })
@@ -23,7 +27,9 @@ export const statusLikedPost = () => {
                     // Если пост не лайкнут, ставим лайк
                     result = await likedPost({ tokenId, postId })
                 }
-
+                button.classList.remove('loading')
+                button.disable = false
+                
                 // Обновляем интерфейс
                 renderStatusLikedPost(result) // Обновляем состояние
             } catch (error) {
@@ -36,38 +42,38 @@ export const statusLikedPost = () => {
 export const renderStatusLikedPost = (data) => {
     // Проверяем, что данные корректные
     if (!data || !data.post) {
-        console.error('Неверная структура данных для обновления статуса лайка:', data);
-        return; // Выходим из функции, если данные неверные
+        console.error('Неверная структура данных для обновления статуса лайка:', data)
+        return // Выходим из функции, если данные неверные
     }
 
-    const buttonEl = document.querySelector(`[data-post-id='${data.post.id}']`);
+    const buttonEl = document.querySelector(`[data-post-id='${data.post.id}']`)
 
     if (!buttonEl) {
-        console.error(`Кнопка лайка с ID ${data.post.id} не найдена`);
-        return; // Выходим из функции, если кнопка не найдена
+        console.error(`Кнопка лайка с ID ${data.post.id} не найдена`)
+        return // Выходим из функции, если кнопка не найдена
     }
 
-    const img = buttonEl.querySelector('img');
+    const img = buttonEl.querySelector('img')
 
     if (img) {
-        img.src = data.post.isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg';
+        img.src = data.post.isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg'
     } else {
-        console.error('Изображение внутри кнопки лайка не найдено');
+        console.error('Изображение внутри кнопки лайка не найдено')
     }
 
-    const likesTextElement = buttonEl.nextElementSibling; // Получаем следующий элемент
+    const likesTextElement = buttonEl.nextElementSibling // Получаем следующий элемент
 
     if (likesTextElement) {
-        const likesText = likesTextElement.querySelector('strong');
+        const likesText = likesTextElement.querySelector('strong')
 
         if (likesText) {
-            likesText.textContent = data.post.likes.length; // Обновляем количество лайков
+            likesText.textContent = data.post.likes.length // Обновляем количество лайков
         } else {
-            console.error('Элемент <strong> для количества лайков не найден');
+            console.error('Элемент <strong> для количества лайков не найден')
         }
     } else {
-        console.error('Элемент для обновления количества лайков не найден');
+        console.error('Элемент для обновления количества лайков не найден')
     }
 
-    console.log(data.post.isLiked); // Для отладки
-};
+    console.log(data.post.isLiked) // Для отладки
+}

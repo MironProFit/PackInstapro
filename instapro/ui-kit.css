@@ -62,8 +62,31 @@ body.dark-mode {
 }
 
 .post-image-container.dark-mode {
-    background-color: #474646; /* Цвет для темного режима */
+    background-color: #3b3a3a; /* Цвет для темного режима */
 }
+/* изменение статуса лайка */
+.loading {
+  opacity: 0.5; /* Прозрачность для индикации загрузки */
+  cursor: not-allowed; /* Изменение курсора на "недоступно" */
+  animation: pulse 1s infinite; /* Анимация пульсации */
+}
+
+
+@keyframes pulse {
+  0% {
+      transform: scale(1); /* Исходный размер */
+      opacity: 0.5;
+  }
+  50% {
+      transform: scale(1.2); /* Увеличение до 120% */
+      opacity: 1;
+  }
+  100% {
+      transform: scale(1); /* Возвращение к исходному размеру */
+      opacity: 0.5;
+  }
+}
+/*  */
 
 /* Модальное окно  */
 .modal {
