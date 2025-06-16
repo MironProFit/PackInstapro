@@ -5,6 +5,7 @@ import { getPostsUsers, deletePost } from '../api.js' // Убедитесь, ч�
 import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { statusLikedPost } from './liked-post.js'
+import { initializeThemeToggle } from './darkmode.js'
 
 export function renderPostsPageComponent({ appEl }) {
     const appHtml = `
@@ -108,46 +109,47 @@ export function renderPostsPageComponent({ appEl }) {
 
     // Обновляем состояние лайков
     statusLikedPost()
+    document.addEventListener('DOMContentLoaded', initializeThemeToggle)
 }
 
 export function renderUserPostsPageComponent({ appEl, userId }) {
-    console.log('Рендер постов отдельного пользователя');
-    console.log(userId);
+    console.log('Рендер постов отдельного пользователя')
+    console.log(userId)
 
     const renderPostsFromApi = async () => {
-        const containerPosts = document.querySelector('.posts'); // Получаем контейнер постов
+        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
 
         // Получаем посты пользователя
-        const response = await getPostsUsers(userId); // Получаем посты
-        console.log({ response });
+        const response = await getPostsUsers(userId) // Получаем посты
+        console.log({ response })
 
-        const posts = response.posts; // Извлекаем массив постов
-        console.log({ posts });
+        const posts = response.posts // Извлекаем массив постов
+        console.log({ posts })
 
         // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
-            containerPosts.innerHTML = `<p>Посты не найдены.</p>`;
-            return;
+            containerPosts.innerHTML = `<p>Посты не найдены.</p>`
+            return
         }
 
         // Очищаем контейнер перед добавлением новых постов
-        containerPosts.innerHTML = '';
+        containerPosts.innerHTML = ''
 
         // Получаем данные текущего пользователя из localStorage
-        const storedUserData = localStorage.getItem('user');
-        let currentUserId = null;
+        const storedUserData = localStorage.getItem('user')
+        let currentUserId = null
 
         if (storedUserData) {
-            const currentUser = JSON.parse(storedUserData);
-            currentUserId = currentUser._id; // Получаем ID текущего пользователя
-            console.log('Current User ID:', currentUserId);
+            const currentUser = JSON.parse(storedUserData)
+            currentUserId = currentUser._id // Получаем ID текущего пользователя
+            console.log('Current User ID:', currentUserId)
         }
 
         posts.forEach((post) => {
-            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru });
+            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
 
-            const listEl = document.createElement('li');
-            listEl.classList.add('post');
+            const listEl = document.createElement('li')
+            listEl.classList.add('post')
 
             listEl.innerHTML = `
                 <div class='post-header' data-user-id='${post.user.id}'>
@@ -167,42 +169,42 @@ export function renderUserPostsPageComponent({ appEl, userId }) {
                 </div>
                 <p class='post-text'>${post.description}</p>
                 <p class='post-date'>${formattedDate}</p>
-            `;
+            `
 
             // Добавляем кнопку удаления только для своих постов
             if (post.user.id === currentUserId) {
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('button-delete', 'button');
-                deleteButton.dataset.postId = post.id;
-                deleteButton.textContent = 'Удалить';
+                const deleteButton = document.createElement('button')
+                deleteButton.classList.add('button-delete', 'button')
+                deleteButton.dataset.postId = post.id
+                deleteButton.textContent = 'Удалить'
 
                 // Добавляем обработчик события для кнопки удаления
                 deleteButton.addEventListener('click', async () => {
-                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?');
+                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
                     if (confirmDelete) {
-                        const result = await deletePost(post.id); // Удаление поста
+                        const result = await deletePost(post.id) // Удаление поста
                         if (result) {
-                            listEl.remove(); // Удаляем элемент поста из DOM
-                            console.log('Пост удален');
+                            listEl.remove() // Удаляем элемент поста из DOM
+                            console.log('Пост удален')
                         } else {
-                            console.error('Ошибка при удалении поста');
+                            console.error('Ошибка при удалении поста')
                         }
                     }
-                });
+                })
 
                 // Добавляем кнопку удаления под постом
-                listEl.appendChild(deleteButton);
+                listEl.appendChild(deleteButton)
             }
 
             // Добавляем элемент поста в контейнер
-            containerPosts.appendChild(listEl);
-        });
-    };
+            containerPosts.appendChild(listEl)
+        })
+    }
 
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
-    });
+    })
 
-    renderPostsFromApi(); // Вызываем функцию рендеринга
-    statusLikedPost(); // Обновляем состояние лайков
+    renderPostsFromApi() // Вызываем функцию рендеринга
+    statusLikedPost() // Обновляем состояние лайков
 }

@@ -279,3 +279,4 @@ export const deletePost = async (postId) => {
         return false // В случае ошибки возвращаем false
     }
 }
+

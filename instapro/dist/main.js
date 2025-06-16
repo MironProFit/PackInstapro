@@ -308,6 +308,7 @@ const deletePost = async (postId) => {
 }
 
 
+
 /***/ }),
 
 /***/ "./instapro/components/add-post-page-component.js":
@@ -595,6 +596,96 @@ function renderAuthPageComponent({ appEl, setUser }) {
 
 /***/ }),
 
+/***/ "./instapro/components/darkmode.js":
+/*!*****************************************!*\
+  !*** ./instapro/components/darkmode.js ***!
+  \*****************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   initializeThemeToggle: () => (/* binding */ initializeThemeToggle)
+/* harmony export */ });
+const initializeThemeToggle = () => {
+    try {
+        const themeToggle = document.getElementById('theme-toggle');
+        const postImageContainers = document.querySelectorAll('.post-image-container'); // Получаем все контейнеры изображений
+        const sunIcon = document.querySelector('.sun-icon'); // Получаем иконку солнца
+        const moonIcon = document.querySelector('.moon-icon'); // Получаем иконку луны
+
+        // Проверяем наличие элемента themeToggle
+        if (!themeToggle) {
+            console.error('Не найден элемент #theme-toggle');
+            return; // Выходим из функции, если элемент не найден
+        }
+
+        // Проверяем сохраненный режим в localStorage
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true; // Устанавливаем переключатель в положение 'включено'
+
+            // Применяем темный режим ко всем контейнерам
+            postImageContainers.forEach(container => {
+                container.classList.add('dark-mode');
+            });
+
+            // Скрываем солнце и показываем луну
+            sunIcon.style.opacity = 0; // Скрываем иконку солнца
+            moonIcon.style.opacity = 1; // Показываем иконку луны
+        } else {
+            document.body.classList.add('light-mode');
+
+            // Применяем светлый режим ко всем контейнерам
+            postImageContainers.forEach(container => {
+                container.classList.add('light-mode');
+            });
+
+            // Показываем солнце и скрываем луну
+            sunIcon.style.opacity = 1; // Показываем иконку солнца
+            moonIcon.style.opacity = 0; // Скрываем иконку луны
+        }
+
+        // Обработчик события для переключателя
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                // Если переключатель включен, устанавливаем темный режим
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+
+                // Применяем темный режим ко всем контейнерам
+                postImageContainers.forEach(container => {
+                    container.classList.remove('light-mode');
+                    container.classList.add('dark-mode');
+                });
+
+                // Скрываем солнце и показываем луну
+                sunIcon.style.opacity = 0; // Скрываем иконку солнца
+                moonIcon.style.opacity = 1; // Показываем иконку луны
+                localStorage.setItem('theme', 'dark'); // Сохраняем выбранный режим
+            } else {
+                // Если переключатель выключен, устанавливаем светлый режим
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+
+                // Применяем светлый режим ко всем контейнерам
+                postImageContainers.forEach(container => {
+                    container.classList.remove('dark-mode');
+                    container.classList.add('light-mode');
+                });
+
+                // Показываем солнце и скрываем луну
+                sunIcon.style.opacity = 1; // Показываем иконку солнца
+                moonIcon.style.opacity = 0; // Скрываем иконку луны
+                localStorage.setItem('theme', 'light'); // Сохраняем выбранный режим
+            }
+        });
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+};
+
+/***/ }),
+
 /***/ "./instapro/components/header-component.js":
 /*!*************************************************!*\
   !*** ./instapro/components/header-component.js ***!
@@ -607,68 +698,70 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
 /* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../routes.js */ "./instapro/routes.js");
+/* harmony import */ var _darkmode_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./darkmode.js */ "./instapro/components/darkmode.js");
+
 
 
 
 /**
  * Компонент заголовка страницы.
  * Этот компонент отображает шапку страницы с логотипом, кнопкой добавления постов/входа и кнопкой выхода (если пользователь авторизован).
- * 
+ *
  * @param {HTMLElement} params.element - HTML-элемент, в который будет рендериться заголовок.
  * @returns {HTMLElement} Возвращает элемент заголовка после рендеринга.
  */
 function renderHeaderComponent({ element }) {
-  /**
-   * Рендерит содержимое заголовка.
-   */
-  element.innerHTML = `
+    /**
+     * Рендерит содержимое заголовка.
+     */
+    element.innerHTML = `
   <div class="page-header">
       <h1 class="logo">instapro</h1>
       <button class="header-button add-or-login-button">
-      ${
-        _index_js__WEBPACK_IMPORTED_MODULE_0__.user
-          ? `<div title="Добавить пост" class="add-post-sign"></div>`
-          : "Войти"
-      }
+      ${_index_js__WEBPACK_IMPORTED_MODULE_0__.user ? `<div title="Добавить пост" class="add-post-sign"></div>` : 'Войти'}
+      
       </button>
-      ${
-        _index_js__WEBPACK_IMPORTED_MODULE_0__.user
-          ? `<button title="${_index_js__WEBPACK_IMPORTED_MODULE_0__.user.name}" class="header-button logout-button">Выйти</button>`
-          : ""
-      }  
+      <div class="theme-switcher">
+    <label for="theme-toggle" class="switch">
+        <input type="checkbox" id="theme-toggle">
+        <span class="slider"></span>
+        <span class="icon sun-icon">☀️</span>
+        <span class="icon moon-icon">🌙</span>
+    </label>
+</div>
+      ${_index_js__WEBPACK_IMPORTED_MODULE_0__.user ? `<button title="${_index_js__WEBPACK_IMPORTED_MODULE_0__.user.name}" class="header-button logout-button">Выйти</button>` : ''}  
   </div>
-  `;
+  `
 
-  /**
-   * Обработчик клика по кнопке "Добавить пост"/"Войти".
-   * Если пользователь авторизован, перенаправляет на страницу добавления постов.
-   * Если пользователь не авторизован, перенаправляет на страницу авторизации.
-   */
-  element
-    .querySelector(".add-or-login-button")
-    .addEventListener("click", () => {
-      if (_index_js__WEBPACK_IMPORTED_MODULE_0__.user) {
-        (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.ADD_POSTS_PAGE);
-      } else {
-        (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.AUTH_PAGE);
-      }
-    });
+    /**
+     * Обработчик клика по кнопке "Добавить пост"/"Войти".
+     * Если пользователь авторизован, перенаправляет на страницу добавления постов.
+     * Если пользователь не авторизован, перенаправляет на страницу авторизации.
+     */
+    element.querySelector('.add-or-login-button').addEventListener('click', () => {
+        if (_index_js__WEBPACK_IMPORTED_MODULE_0__.user) {
+            (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.ADD_POSTS_PAGE)
+        } else {
+            (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.AUTH_PAGE)
+        }
+    })
 
-  /**
-   * Обработчик клика по логотипу.
-   * Перенаправляет на страницу с постами.
-   */
-  element.querySelector(".logo").addEventListener("click", () => {
-    (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.POSTS_PAGE);
-  });
+    /**
+     * Обработчик клика по логотипу.
+     * Перенаправляет на страницу с постами.
+     */
+    element.querySelector('.logo').addEventListener('click', () => {
+        ;(0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.POSTS_PAGE)
+    })
 
-  /**
-   * Обработчик клика по кнопке "Выйти".
-   * Если кнопка существует (т.е. пользователь авторизован), вызывает функцию `logout`.
-   */
-  element.querySelector(".logout-button")?.addEventListener("click", _index_js__WEBPACK_IMPORTED_MODULE_0__.logout);
+    /**
+     * Обработчик клика по кнопке "Выйти".
+     * Если кнопка существует (т.е. пользователь авторизован), вызывает функцию `logout`.
+     */
+    element.querySelector('.logout-button')?.addEventListener('click', _index_js__WEBPACK_IMPORTED_MODULE_0__.logout)
+    document.addEventListener('DOMContentLoaded', _darkmode_js__WEBPACK_IMPORTED_MODULE_2__.initializeThemeToggle)
 
-  return element;
+    return element
 }
 
 
@@ -831,13 +924,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _header_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./header-component.js */ "./instapro/components/header-component.js");
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
-/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
-/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
+/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
+/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
 /* harmony import */ var _liked_post_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./liked-post.js */ "./instapro/components/liked-post.js");
+/* harmony import */ var _darkmode_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./darkmode.js */ "./instapro/components/darkmode.js");
 
 
 
  // Убедитесь, что импортируете getPostsUsers
+
 
 
 
@@ -859,7 +954,7 @@ function renderPostsPageComponent({ appEl }) {
         _index_js__WEBPACK_IMPORTED_MODULE_2__.posts.forEach((post) => {
             const listEl = document.createElement('li')
             listEl.classList.add('post')
-            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_5__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_6__.ru })
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
 
             listEl.innerHTML = `
                 <div class='post-header' data-user-id='${post.user.id}'>
@@ -944,46 +1039,47 @@ function renderPostsPageComponent({ appEl }) {
 
     // Обновляем состояние лайков
     (0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)()
+    document.addEventListener('DOMContentLoaded', _darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)
 }
 
 function renderUserPostsPageComponent({ appEl, userId }) {
-    console.log('Рендер постов отдельного пользователя');
-    console.log(userId);
+    console.log('Рендер постов отдельного пользователя')
+    console.log(userId)
 
     const renderPostsFromApi = async () => {
-        const containerPosts = document.querySelector('.posts'); // Получаем контейнер постов
+        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
 
         // Получаем посты пользователя
-        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId); // Получаем посты
-        console.log({ response });
+        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId) // Получаем посты
+        console.log({ response })
 
-        const posts = response.posts; // Извлекаем массив постов
-        console.log({ posts });
+        const posts = response.posts // Извлекаем массив постов
+        console.log({ posts })
 
         // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
-            containerPosts.innerHTML = `<p>Посты не найдены.</p>`;
-            return;
+            containerPosts.innerHTML = `<p>Посты не найдены.</p>`
+            return
         }
 
         // Очищаем контейнер перед добавлением новых постов
-        containerPosts.innerHTML = '';
+        containerPosts.innerHTML = ''
 
         // Получаем данные текущего пользователя из localStorage
-        const storedUserData = localStorage.getItem('user');
-        let currentUserId = null;
+        const storedUserData = localStorage.getItem('user')
+        let currentUserId = null
 
         if (storedUserData) {
-            const currentUser = JSON.parse(storedUserData);
-            currentUserId = currentUser._id; // Получаем ID текущего пользователя
-            console.log('Current User ID:', currentUserId);
+            const currentUser = JSON.parse(storedUserData)
+            currentUserId = currentUser._id // Получаем ID текущего пользователя
+            console.log('Current User ID:', currentUserId)
         }
 
         posts.forEach((post) => {
-            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_5__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_6__.ru });
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
 
-            const listEl = document.createElement('li');
-            listEl.classList.add('post');
+            const listEl = document.createElement('li')
+            listEl.classList.add('post')
 
             listEl.innerHTML = `
                 <div class='post-header' data-user-id='${post.user.id}'>
@@ -1003,44 +1099,44 @@ function renderUserPostsPageComponent({ appEl, userId }) {
                 </div>
                 <p class='post-text'>${post.description}</p>
                 <p class='post-date'>${formattedDate}</p>
-            `;
+            `
 
             // Добавляем кнопку удаления только для своих постов
             if (post.user.id === currentUserId) {
-                const deleteButton = document.createElement('button');
-                deleteButton.classList.add('button-delete', 'button');
-                deleteButton.dataset.postId = post.id;
-                deleteButton.textContent = 'Удалить';
+                const deleteButton = document.createElement('button')
+                deleteButton.classList.add('button-delete', 'button')
+                deleteButton.dataset.postId = post.id
+                deleteButton.textContent = 'Удалить'
 
                 // Добавляем обработчик события для кнопки удаления
                 deleteButton.addEventListener('click', async () => {
-                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?');
+                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
                     if (confirmDelete) {
-                        const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id); // Удаление поста
+                        const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id) // Удаление поста
                         if (result) {
-                            listEl.remove(); // Удаляем элемент поста из DOM
-                            console.log('Пост удален');
+                            listEl.remove() // Удаляем элемент поста из DOM
+                            console.log('Пост удален')
                         } else {
-                            console.error('Ошибка при удалении поста');
+                            console.error('Ошибка при удалении поста')
                         }
                     }
-                });
+                })
 
                 // Добавляем кнопку удаления под постом
-                listEl.appendChild(deleteButton);
+                listEl.appendChild(deleteButton)
             }
 
             // Добавляем элемент поста в контейнер
-            containerPosts.appendChild(listEl);
-        });
-    };
+            containerPosts.appendChild(listEl)
+        })
+    }
 
-    (0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
+    ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
         element: document.querySelector('.header-container'),
-    });
+    })
 
-    renderPostsFromApi(); // Вызываем функцию рендеринга
-    (0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)(); // Обновляем состояние лайков
+    renderPostsFromApi() // Вызываем функцию рендеринга
+    ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)() // Обновляем состояние лайков
 }
 
 
@@ -1183,6 +1279,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
 /* harmony import */ var _components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/loading-page-component.js */ "./instapro/components/loading-page-component.js");
 /* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./helpers.js */ "./instapro/helpers.js");
+/* harmony import */ var _components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./components/darkmode.js */ "./instapro/components/darkmode.js");
+
 
 
 
@@ -1219,18 +1317,22 @@ const goToPage = (newPage, data) => {
             /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
             page = user ? _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE : _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE
             console.log('Начало работы')
-            return renderApp()
+            renderApp()
+            ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+            return
         }
 
         if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
             page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE
             renderApp()
+            ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
 
             return (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.getPosts)({ token: getToken() })
                 .then((newPosts) => {
                     page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE
                     posts = newPosts
                     renderApp()
+                    ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
                 })
                 .catch((error) => {
                     console.error(error)
@@ -1256,7 +1358,7 @@ const goToPage = (newPage, data) => {
 
         page = newPage
         renderApp()
-
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
         return
     }
 
@@ -1267,15 +1369,18 @@ const renderApp = () => {
     console.log('запуск рендера')
     const appEl = document.getElementById('app')
     if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE) {
-        return (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__.renderLoadingPageComponent)({
+        (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__.renderLoadingPageComponent)({
             appEl,
             user,
             goToPage,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
     if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE) {
-        return (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__.renderAuthPageComponent)({
+        (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__.renderAuthPageComponent)({
             appEl,
             setUser: (newUser) => {
                 user = newUser
@@ -1285,46 +1390,57 @@ const renderApp = () => {
             user,
             goToPage,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
     if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE) {
-        console.log(page);
-        console.log('Перешли на страницу загрузки поста');
-    
-        return (0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAddPostPageComponent)({
+        console.log(page)
+        console.log('Перешли на страницу загрузки поста')
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        ;(0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAddPostPageComponent)({
             appEl,
             onAddPostClick: async ({ description }) => {
                 try {
-                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage);
-                    const token = getToken(); // Получаем токен
-    
+                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage)
+                    const token = getToken() // Получаем токен
+
                     // Проверяем, выбран ли файл
                     if (!_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage || !_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage.fileUrl) {
-                        alert('Пожалуйста, выберите файл для загрузки.');
-                        return; // Не продолжать, если файл не выбран
+                        alert('Пожалуйста, выберите файл для загрузки.')
+                        return // Не продолжать, если файл не выбран
                     }
-    
+
                     // Добавляем новый пост
-                    const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, urlLoadingImage: _api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage });
-                    posts.push(newPost); // Добавляем новый пост в массив постов
-                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE); // Переходим на страницу постов
-                    console.log('Добавляю пост');
+                    const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, urlLoadingImage: _api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage })
+                    posts.push(newPost) // Добавляем новый пост в массив постов
+                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) // Переходим на страницу постов
+                    console.log('Добавляю пост')
                 } catch (err) {
-                    console.error('Ошибка при добавлении поста:', err); // Логируем ошибку
-                    alert('Не удалось добавить пост. Попробуйте еще раз.'); // Отображаем сообщение пользователю
+                    console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
+                    alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю
                 }
             },
-        });
+        })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
     if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
-        return (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderPostsPageComponent)({
+        (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderPostsPageComponent)({
             appEl,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+        return
     }
 
     if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE) {
         (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderUserPostsPageComponent)({ appEl })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
         // @TODO: реализовать страницу с фотографиями отдельного пользвателя
         // appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
         return
@@ -1332,6 +1448,7 @@ const renderApp = () => {
 }
 
 goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
+;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
 
 
 /***/ }),
