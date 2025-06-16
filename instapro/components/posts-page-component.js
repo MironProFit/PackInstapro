@@ -7,110 +7,6 @@ import { ru } from 'date-fns/locale'
 import { statusLikedPost } from './liked-post.js'
 import { initializeThemeToggle } from './darkmode.js'
 
-// export function renderPostsPageComponent({ appEl }) {
-//     const appHtml = `
-//         <div class='page-container'>
-//             <div class='header-container'></div>
-//             <ul class='posts'></ul>
-//         </div>
-//     `
-
-//     appEl.innerHTML = appHtml
-
-//     const renderPostsFromApi = () => {
-//         const containerPosts = document.querySelector('.posts')
-//         containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
-
-//         posts.forEach((post) => {
-//             const listEl = document.createElement('li')
-//             listEl.classList.add('post')
-//             const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
-
-//             listEl.innerHTML = `
-//                 <div class='post-header' data-user-id='${post.user.id}'>
-//                     <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
-//                     <p class='post-header__user-name'>${post.user.name}</p>
-//                 </div>
-//                 <div class='post-image-container'>
-//                     <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
-//                 </div>
-//                 <div class='post-likes'>
-//                     <button data-post-id='${post.id}' class='like-button'>
-//                         <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg' alt='Лайк'>
-//                     </button>
-//                     <p class='post-likes-text'>
-//                         Нравится: <strong>${post.likes.length}</strong>
-//                     </p>
-//                 </div>
-//                 <p class='post-text'>${post.description}</p>
-//                 <p class='post-date'>${formattedDate}</p>
-//             `
-
-//             // Проверяем, является ли текущий пользователь автором поста
-//             const storedUserData = localStorage.getItem('user')
-//             if (storedUserData) {
-//                 // Парсим данные из JSON и получаем объект пользователя
-//                 const currentUser = JSON.parse(storedUserData)
-//                 const currentUserId = currentUser._id // Получаем ID текущего пользователя
-//                 console.log('Current User ID:', currentUserId)
-
-//                 // Добавляем кнопку удаления только для своих постов
-//                 if (post.user.id === currentUserId) {
-//                     const deleteButton = document.createElement('button')
-//                     deleteButton.classList.add('button-delete', 'button') // Добавляем оба класса
-//                     deleteButton.dataset.postId = post.id
-//                     deleteButton.textContent = 'Удалить'
-
-//                     // Добавляем обработчик события для кнопки удаления
-//                     deleteButton.addEventListener('click', async () => {
-//                         const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
-//                         if (confirmDelete) {
-//                             const result = await deletePost(post.id) // Функция для удаления поста
-//                             if (result) {
-//                                 listEl.remove() // Удаляем элемент поста из DOM
-//                                 console.log('Пост удален')
-//                             } else {
-//                                 console.error('Ошибка при удалении поста')
-//                             }
-//                         }
-//                     })
-
-//                     listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
-//                 }
-//             } else {
-//                 console.log('Пользователь не найден в localStorage')
-//             }
-
-//             // Добавляем элемент поста в контейнер
-//             containerPosts.appendChild(listEl)
-//         })
-//     }
-
-//     renderPostsFromApi()
-
-//     renderHeaderComponent({
-//         element: document.querySelector('.header-container'),
-//     })
-
-//     // Обработчик для перехода к постам пользователя
-//     const postsContainer = document.querySelector('.posts')
-//     if (postsContainer) {
-//         postsContainer.addEventListener('click', (event) => {
-//             const userEl = event.target.closest('.post-header') // Находим ближайший .post-header
-//             if (userEl) {
-//                 const userId = userEl.dataset.userId
-//                 if (userId) {
-//                     goToPage(USER_POSTS_PAGE, { userId: userId })
-//                     console.log('Переход к постам пользователя с ID:', userId)
-//                 }
-//             }
-//         })
-//     }
-
-//     // Обновляем состояние лайков
-//     statusLikedPost()
-//     document.addEventListener('DOMContentLoaded', initializeThemeToggle)
-// }
 export function renderPostsPageComponent({ appEl }) {
     const appHtml = `
         <div class='modal' id='modal' style='display: none;'>
@@ -124,18 +20,18 @@ export function renderPostsPageComponent({ appEl }) {
             <div class='header-container'></div>
             <ul class='posts'></ul>
         </div>
-    `;
+    `
 
-    appEl.innerHTML = appHtml;
+    appEl.innerHTML = appHtml
 
     const renderPostsFromApi = () => {
-        const containerPosts = document.querySelector('.posts');
-        containerPosts.innerHTML = ''; // Очищаем контейнер перед добавлением новых постов
+        const containerPosts = document.querySelector('.posts')
+        containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
 
         posts.forEach((post) => {
-            const listEl = document.createElement('li');
-            listEl.classList.add('post');
-            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru });
+            const listEl = document.createElement('li')
+            listEl.classList.add('post')
+            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
 
             listEl.innerHTML = `
                 <div class='post-header' data-user-id='${post.user.id}'>
@@ -153,126 +49,126 @@ export function renderPostsPageComponent({ appEl }) {
                 </div>
                 <p class='post-text'>${post.description}</p>
                 <p class='post-date'>${formattedDate}</p>
-            `;
+            `
 
             // Обработчик для открытия модального окна при нажатии на изображение
-            const postImage = listEl.querySelector('.post-image');
+            const postImage = listEl.querySelector('.post-image')
             postImage.addEventListener('click', () => {
-                const modal = document.getElementById('modal');
-                const modalImage = document.getElementById('modal-image');
-                modalImage.src = post.imageUrl; // Устанавливаем изображение в модальном окне
-                modal.style.display = 'block'; // Показываем модальное окно
-            });
+                const modal = document.getElementById('modal')
+                const modalImage = document.getElementById('modal-image')
+                modalImage.src = post.imageUrl // Устанавливаем изображение в модальном окне
+                modal.style.display = 'block' // Показываем модальное окно
+            })
 
             // Добавляем обработчик для закрытия модального окна
-            const closeModal = document.getElementById('close-modal');
+            const closeModal = document.getElementById('close-modal')
             closeModal.addEventListener('click', () => {
-                const modal = document.getElementById('modal');
-                modal.style.display = 'none'; // Закрываем модальное окно
-            });
+                const modal = document.getElementById('modal')
+                modal.style.display = 'none' // Закрываем модальное окно
+            })
 
             // Проверяем, является ли текущий пользователь автором поста
-            const storedUserData = localStorage.getItem('user');
+            const storedUserData = localStorage.getItem('user')
             if (storedUserData) {
-                const currentUser = JSON.parse(storedUserData);
-                const currentUserId = currentUser._id; // Получаем ID текущего пользователя
+                const currentUser = JSON.parse(storedUserData)
+                const currentUserId = currentUser._id // Получаем ID текущего пользователя
 
                 // Добавляем кнопку удаления только для своих постов
                 if (post.user.id === currentUserId) {
-                    const deleteButton = document.createElement('button');
-                    deleteButton.classList.add('button-delete', 'button'); // Добавляем оба класса
-                    deleteButton.dataset.postId = post.id;
-                    deleteButton.textContent = 'Удалить';
+                    const deleteButton = document.createElement('button')
+                    deleteButton.classList.add('button-delete', 'button') // Добавляем оба класса
+                    deleteButton.dataset.postId = post.id
+                    deleteButton.textContent = 'Удалить'
 
                     // Добавляем обработчик события для кнопки удаления
                     deleteButton.addEventListener('click', async () => {
-                        const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?');
+                        const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
                         if (confirmDelete) {
-                            const result = await deletePost(post.id); // Функция для удаления поста
+                            const result = await deletePost(post.id) // Функция для удаления поста
                             if (result) {
-                                listEl.remove(); // Удаляем элемент поста из DOM
-                                console.log('Пост удален');
+                                listEl.remove() // Удаляем элемент поста из DOM
+                                console.log('Пост удален')
                             } else {
-                                console.error('Ошибка при удалении поста');
+                                console.error('Ошибка при удалении поста')
                             }
                         }
-                    });
+                    })
 
-                    listEl.appendChild(deleteButton); // Добавляем кнопку удаления под постом
+                    listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
                 }
             } else {
-                console.log('Пользователь не найден в localStorage');
+                console.log('Пользователь не найден в localStorage')
             }
 
             // Добавляем элемент поста в контейнер
-            containerPosts.appendChild(listEl);
-        });
-    };
+            containerPosts.appendChild(listEl)
+        })
+    }
 
-    renderPostsFromApi();
+    renderPostsFromApi()
 
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
-    });
+    })
 
     // Обработчик для перехода к постам пользователя
-    const postsContainer = document.querySelector('.posts');
+    const postsContainer = document.querySelector('.posts')
     if (postsContainer) {
         postsContainer.addEventListener('click', (event) => {
-            const userEl = event.target.closest('.post-header'); // Находим ближайший .post-header
+            const userEl = event.target.closest('.post-header') // Находим ближайший .post-header
             if (userEl) {
-                const userId = userEl.dataset.userId;
+                const userId = userEl.dataset.userId
                 if (userId) {
-                    goToPage(USER_POSTS_PAGE, { userId: userId });
-                    console.log('Переход к постам пользователя с ID:', userId);
+                    goToPage(USER_POSTS_PAGE, { userId: userId })
+                    console.log('Переход к постам пользователя с ID:', userId)
                 }
             }
-        });
+        })
     }
 
     // Обновляем состояние лайков
-    statusLikedPost();
-    document.addEventListener('DOMContentLoaded', initializeThemeToggle);
+    statusLikedPost()
+    document.addEventListener('DOMContentLoaded', initializeThemeToggle)
 }
 
 export function renderUserPostsPageComponent({ appEl, userId }) {
-    console.log('Рендер постов отдельного пользователя')
-    console.log(userId)
+    console.log('Рендер постов отдельного пользователя');
+    console.log(userId);
 
     const renderPostsFromApi = async () => {
-        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
+        const containerPosts = document.querySelector('.posts'); // Получаем контейнер постов
 
         // Получаем посты пользователя
-        const response = await getPostsUsers(userId) // Получаем посты
-        console.log({ response })
+        const response = await getPostsUsers(userId); // Получаем посты
+        console.log({ response });
 
-        const posts = response.posts // Извлекаем массив постов
-        console.log({ posts })
+        const posts = response.posts; // Извлекаем массив постов
+        console.log({ posts });
 
         // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
-            containerPosts.innerHTML = `<p>Посты не найдены.</p>`
-            return
+            containerPosts.innerHTML = `<p>Посты не найдены.</p>`;
+            return;
         }
 
         // Очищаем контейнер перед добавлением новых постов
-        containerPosts.innerHTML = ''
+        containerPosts.innerHTML = '';
 
         // Получаем данные текущего пользователя из localStorage
-        const storedUserData = localStorage.getItem('user')
-        let currentUserId = null
+        const storedUserData = localStorage.getItem('user');
+        let currentUserId = null;
 
         if (storedUserData) {
-            const currentUser = JSON.parse(storedUserData)
-            currentUserId = currentUser._id // Получаем ID текущего пользователя
-            console.log('Current User ID:', currentUserId)
+            const currentUser = JSON.parse(storedUserData);
+            currentUserId = currentUser._id; // Получаем ID текущего пользователя
+            console.log('Current User ID:', currentUserId);
         }
 
         posts.forEach((post) => {
-            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
+            const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru });
 
-            const listEl = document.createElement('li')
-            listEl.classList.add('post')
+            const listEl = document.createElement('li');
+            listEl.classList.add('post');
 
             listEl.innerHTML = `
                 <div class='post-header' data-user-id='${post.user.id}'>
@@ -292,42 +188,49 @@ export function renderUserPostsPageComponent({ appEl, userId }) {
                 </div>
                 <p class='post-text'>${post.description}</p>
                 <p class='post-date'>${formattedDate}</p>
-            `
+            `;
 
             // Добавляем кнопку удаления только для своих постов
             if (post.user.id === currentUserId) {
-                const deleteButton = document.createElement('button')
-                deleteButton.classList.add('button-delete', 'button')
-                deleteButton.dataset.postId = post.id
-                deleteButton.textContent = 'Удалить'
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('button-delete', 'button');
+                deleteButton.dataset.postId = post.id;
+                deleteButton.textContent = 'Удалить';
 
                 // Добавляем обработчик события для кнопки удаления
                 deleteButton.addEventListener('click', async () => {
-                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+                    const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?');
                     if (confirmDelete) {
-                        const result = await deletePost(post.id) // Удаление поста
+                        const result = await deletePost(post.id); // Удаление поста
                         if (result) {
-                            listEl.remove() // Удаляем элемент поста из DOM
-                            console.log('Пост удален')
+                            listEl.remove(); // Удаляем элемент поста из DOM
+                            console.log('Пост удален');
                         } else {
-                            console.error('Ошибка при удалении поста')
+                            console.error('Ошибка при удалении поста');
                         }
                     }
-                })
+                });
 
                 // Добавляем кнопку удаления под постом
-                listEl.appendChild(deleteButton)
+                listEl.appendChild(deleteButton);
             }
 
             // Добавляем элемент поста в контейнер
-            containerPosts.appendChild(listEl)
-        })
-    }
+            containerPosts.appendChild(listEl);
+        });
+    };
 
+    // Рендерим заголовок компонента
     renderHeaderComponent({
         element: document.querySelector('.header-container'),
-    })
+    });
 
-    renderPostsFromApi() // Вызываем функцию рендеринга
-    statusLikedPost() // Обновляем состояние лайков
+    // Рендерим посты
+    renderPostsFromApi(); // Вызываем функцию рендеринга
+
+    // Инициализация переключателя темы
+    initializeThemeToggle(); // Вызываем функцию инициализации темы
+
+    // Обновляем состояние лайков
+    statusLikedPost(); // Обновляем состояние лайков
 }

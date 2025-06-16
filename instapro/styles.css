@@ -65,14 +65,14 @@
     margin-right: 10px;
 }
 
-.post-image-container {
+/* .post-image-container {
     margin-left: -20px;
     margin-right: -20px;
     height: 500px;
     display: flex;
     justify-content: center;
     background-color: #e0e0e0;
-}
+} */
 
 .post-image {
     width: 100%;

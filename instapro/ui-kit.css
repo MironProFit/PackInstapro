@@ -54,6 +54,11 @@ body.dark-mode {
 }
 
 .post-image-container {
+    margin-left: -20px;
+    margin-right: -20px;
+    height: 500px;
+    display: flex;
+    justify-content: center;
     transition: background-color 0.3s; /* Плавный переход для контейнера изображений */
 }
 
@@ -66,150 +71,146 @@ body.dark-mode {
 }
 /* изменение статуса лайка */
 .loading {
-  opacity: 0.5; /* Прозрачность для индикации загрузки */
-  cursor: not-allowed; /* Изменение курсора на "недоступно" */
-  animation: pulse 1s infinite; /* Анимация пульсации */
+    opacity: 0.5; /* Прозрачность для индикации загрузки */
+    cursor: not-allowed; /* Изменение курсора на "недоступно" */
+    animation: pulse 1s infinite; /* Анимация пульсации */
 }
 
-
 @keyframes pulse {
-  0% {
-      transform: scale(1); /* Исходный размер */
-      opacity: 0.5;
-  }
-  50% {
-      transform: scale(1.2); /* Увеличение до 120% */
-      opacity: 1;
-  }
-  100% {
-      transform: scale(1); /* Возвращение к исходному размеру */
-      opacity: 0.5;
-  }
+    0% {
+        transform: scale(1); /* Исходный размер */
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2); /* Увеличение до 120% */
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1); /* Возвращение к исходному размеру */
+        opacity: 0.5;
+    }
 }
 /*  */
 
 /* Модальное окно  */
 .modal {
-  display: none; /* Скрыто по умолчанию */
-  position: fixed; /* Зафиксированное положение */
-  z-index: 1000; /* На переднем плане */
-  left: 0;
-  top: 0;
-  width: 100%; /* Полная ширина */
-  height: 100%; /* Полная высота */
-  overflow: auto; /* Включаем прокрутку, если нужно */
-  background-color: rgba(0, 0, 0, 0.8); /* Черный фон с прозрачностью */
+    display: none; /* Скрыто по умолчанию */
+    position: fixed; /* Зафиксированное положение */
+    z-index: 1000; /* На переднем плане */
+    left: 0;
+    top: 0;
+    width: 100%; /* Полная ширина */
+    height: 100%; /* Полная высота */
+    overflow: auto; /* Включаем прокрутку, если нужно */
+    background-color: rgba(0, 0, 0, 0.8); /* Черный фон с прозрачностью */
 }
 
 .modal-content {
-  position: absolute; /* Изменено на absolute для центрирования */
-  top: 50%; /* Позиционируем по вертикали */
-  left: 50%; /* Позиционируем по горизонтали */
-  transform: translate(-50%, -50%); /* Центрируем содержимое */
-  max-width: 100%; /* Максимальная ширина изображения */
+    position: absolute; /* Изменено на absolute для центрирования */
+    top: 50%; /* Позиционируем по вертикали */
+    left: 50%; /* Позиционируем по горизонтали */
+    transform: translate(-50%, -50%); /* Центрируем содержимое */
+    max-width: 100%; /* Максимальная ширина изображения */
 }
 
 .modal img {
-  width: 100%; /* Ширина изображения подстраивается под ширину контейнера */
-  height: auto; /* Автоматическая высота для сохранения пропорций */
+    width: 100%; /* Ширина изображения подстраивается под ширину контейнера */
+    height: auto; /* Автоматическая высота для сохранения пропорций */
 }
 
 .close {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  background-color: #fff;
-  color: #000; /* Цвет текста белый */
-  font-size: 30px; /* Размер шрифта */
-  font-weight: bold; /* Жирный шрифт */
-  border: 2px solid #000; /* Без рамки */
-  border-radius: 10px;
-  cursor: pointer; /* Курсор в виде указателя */
-  transition: 0.3s; /* Плавный переход цвета */
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background-color: #fff;
+    color: #000; /* Цвет текста белый */
+    font-size: 30px; /* Размер шрифта */
+    font-weight: bold; /* Жирный шрифт */
+    border: 2px solid #000; /* Без рамки */
+    border-radius: 10px;
+    cursor: pointer; /* Курсор в виде указателя */
+    transition: 0.3s; /* Плавный переход цвета */
 }
 
 .close:hover {
-  background-color: #000;
-
-
-  color:#fff; /* Изменение цвета при наведении */
+    background-color: #000;
+    color: #fff; /* Изменение цвета при наведении */
 }
 
 /*  */
 
 /* Свитчер режима  */
 .theme-switcher {
-  display: flex;
-  align-items: center;
-  font-family: Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    font-family: Arial, sans-serif;
 }
 
 .switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
 }
 
-input[type="checkbox"] {
-  opacity: 0; /* Скрываем стандартный чекбокс */
-  position: absolute;
-  width: 0;
-  height: 0;
+input[type='checkbox'] {
+    opacity: 0; /* Скрываем стандартный чекбокс */
+    position: absolute;
+    width: 0;
+    height: 0;
 }
 
 .slider {
-  width: 40px;
-  height: 20px;
-  background-color: #ccc;
-  border-radius: 25px;
-  position: relative;
-  transition: background-color 0.3s;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 25px;
+    position: relative;
+    transition: background-color 0.3s;
 }
 
 .slider:before {
-  content: "";
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  left: 1px;
-  bottom: 1px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s;
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 1px;
+    bottom: 1px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
 }
 
-input[type="checkbox"]:checked + .slider {
-  background-color: #878787; /* Цвет для темного режима */
+input[type='checkbox']:checked + .slider {
+    background-color: #878787; /* Цвет для темного режима */
 }
 
-input[type="checkbox"]:checked + .slider:before {
-  transform: translateX(20px); /* Перемещение для переключателя */
+input[type='checkbox']:checked + .slider:before {
+    transform: translateX(20px); /* Перемещение для переключателя */
 }
 
 .icon {
-  top: 2px;
-  position: absolute;
-  font-size: 14px;
-  transition: opacity 0.3s;
+    position: absolute;
+    font-size: 14px;
+    transition: opacity 0.3s;
 }
 
 .sun-icon {
-  left: 0;
-  opacity: 1; /* Солнечный символ по умолчанию виден */
+    left: 0;
+    opacity: 1; /* Солнечный символ по умолчанию виден */
 }
 
 .moon-icon {
-  right: 0;
-  opacity: 0; /* Лунный символ по умолчанию скрыт */
+    right: 0;
+    opacity: 0; /* Лунный символ по умолчанию скрыт */
 }
 
-input[type="checkbox"]:checked + .slider .sun-icon {
-  opacity: 0; /* Скрываем солнце при темном режиме */
+input[type='checkbox']:checked + .slider .sun-icon {
+    opacity: 0; /* Скрываем солнце при темном режиме */
 }
 
-input[type="checkbox"]:checked + .slider .moon-icon {
-  opacity: 1; /* Показываем луну при темном режиме */
+input[type='checkbox']:checked + .slider .moon-icon {
+    opacity: 1; /* Показываем луну при темном режиме */
 }
 /*  */
 
