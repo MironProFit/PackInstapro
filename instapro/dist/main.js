@@ -1079,109 +1079,29 @@ function renderPostsPageComponent({ appEl }) {
 //
 //
 
-// export function renderUserPostsPageComponent({ appEl, userId }) {
-//     console.log('Рендер постов отдельного пользователя')
-//     console.log(userId)
-
-//     const renderPostsFromApi = async () => {
-//         const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
-//         console.log(containerPosts)
-
-//         // Получаем посты пользователя
-//         const response = await getPostsUsers(userId) // Получаем посты
-//         console.log({ response })
-
-//         const posts = response.posts // Извлекаем массив постов
-//         console.log({ posts })
-
-//         // Проверяем, является ли posts массивом
-//         if (!Array.isArray(posts) || posts.length === 0) {
-//             containerPosts.innerHTML = `<p>Посты не найдены.</p>`
-//             return
-//         }
-
-//         // Очищаем контейнер перед добавлением новых постов
-//         containerPosts.innerHTML = ''
-
-//         posts.forEach((post) => {
-//             const formattedDate = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: ru })
-
-//             const listEl = document.createElement('li')
-//             listEl.classList.add('post')
-
-//             listEl.innerHTML = `
-//                 <div class='post-header' data-user-id='${post.user.id}' class='post-header'>
-//                     <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}' data-user-id='${post.user.id}'>
-//                     <p class='post-header__user-name' data-user-id='${post.user.id}'>${post.user.name}</p>
-//                 </div>
-//                 <div class='post-image-container'>
-//                     <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
-//                 </div>
-//                 <div class='post-likes'>
-//                     <button data-post-id='${post.id}' class='like-button'>
-//                         <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg'>
-//                     </button>
-//                     <p class='post-likes-text'>
-//                         Нравится: <strong>${post.likes.length}</strong>
-//                     </p>
-//                 </div>
-//                 <p class='post-text'>
-//                     ${post.description}
-//                 </p>
-//                 <p class='post-date'>${formattedDate}</p>
-//             `
-
-//             // Добавляем обработчик событий на имя пользователя и аватарку
-//             const userNameElement = listEl.querySelector('.post-header__user-name')
-//             const userImageElement = listEl.querySelector('.post-header__user-image')
-
-//             userNameElement.addEventListener('click', () => {
-//                 renderUserPostsPageComponent({ appEl, userId: post.user.id })
-//             })
-
-//             userImageElement.addEventListener('click', () => {
-//                 renderUserPostsPageComponent({ appEl, userId: post.user.id })
-//             })
-
-//             containerPosts.appendChild(listEl) // Добавляем пост в контейнер
-//         })
-//     }
-
-//     renderHeaderComponent({
-//         element: document.querySelector('.header-container'),
-//     })
-
-//     renderPostsFromApi() // Вызываем функцию рендеринга
-//     statusLikedPost() // Обновляем состояние лайков
-//     initializeThemeToggle()
-// }
-
 function renderUserPostsPageComponent({ appEl, userId }) {
     console.log('Рендер постов отдельного пользователя')
     console.log(userId)
 
     const renderPostsFromApi = async () => {
         const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
-        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId) // Получаем посты
-        const posts = response.posts // Извлекаем массив постов
+        console.log(containerPosts)
 
+        // Получаем посты пользователя
+        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId) // Получаем посты
+        console.log({ response })
+
+        const posts = response.posts // Извлекаем массив постов
+        console.log({ posts })
+
+        // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
             containerPosts.innerHTML = `<p>Посты не найдены.</p>`
             return
         }
 
-        containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
-
-        // Получаем данные текущего пользователя из localStorage
-        const storedUserData = localStorage.getItem('user')
-        let currentUserId = null
-        let currentUser = null
-
-        if (storedUserData) {
-            currentUser = JSON.parse(storedUserData)
-            currentUserId = currentUser._id // Получаем ID текущего пользователя
-            console.log('Current User ID:', currentUserId)
-        }
+        // Очищаем контейнер перед добавлением новых постов
+        containerPosts.innerHTML = ''
 
         posts.forEach((post) => {
             const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
@@ -1189,27 +1109,25 @@ function renderUserPostsPageComponent({ appEl, userId }) {
             const listEl = document.createElement('li')
             listEl.classList.add('post')
 
-            // Проверяем, лайкнул ли текущий пользователь пост
-            const isLiked = post.likes.includes(currentUserId) // Проверяем, есть ли ID текущего пользователя в массиве лайков
-            const likeImage = isLiked ? 'like-active' : 'like-not-active' // Определяем изображение лайка
-
             listEl.innerHTML = `
-                <div class='post-header' data-user-id='${post.user.id}'>
-                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
-                    <p class='post-header__user-name'>${post.user.name}</p>
+                <div class='post-header' data-user-id='${post.user.id}' class='post-header'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}' data-user-id='${post.user.id}'>
+                    <p class='post-header__user-name' data-user-id='${post.user.id}'>${post.user.name}</p>
                 </div>
                 <div class='post-image-container'>
                     <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
                 </div>
                 <div class='post-likes'>
                     <button data-post-id='${post.id}' class='like-button'>
-                        <img src='./assets/images/${likeImage}.svg' alt='Лайк'>
+                        <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg'>
                     </button>
                     <p class='post-likes-text'>
                         Нравится: <strong>${post.likes.length}</strong>
                     </p>
                 </div>
-                <p class='post-text'>${post.description}</p>
+                <p class='post-text'>
+                    ${post.description}
+                </p>
                 <p class='post-date'>${formattedDate}</p>
             `
 
@@ -1237,6 +1155,7 @@ function renderUserPostsPageComponent({ appEl, userId }) {
     ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)() // Обновляем состояние лайков
     ;(0,_darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)()
 }
+
 
 
 /***/ }),
