@@ -10,13 +10,23 @@
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   addPost: () => (/* binding */ addPost),
+/* harmony export */   deletePost: () => (/* binding */ deletePost),
+/* harmony export */   dislikedPost: () => (/* binding */ dislikedPost),
 /* harmony export */   getAllPosts: () => (/* binding */ getAllPosts),
 /* harmony export */   getPosts: () => (/* binding */ getPosts),
+/* harmony export */   getPostsUsers: () => (/* binding */ getPostsUsers),
+/* harmony export */   likedPost: () => (/* binding */ likedPost),
 /* harmony export */   loginUser: () => (/* binding */ loginUser),
 /* harmony export */   registerUser: () => (/* binding */ registerUser),
-/* harmony export */   uploadImage: () => (/* binding */ uploadImage)
+/* harmony export */   uploadImage: () => (/* binding */ uploadImage),
+/* harmony export */   urlLoadingImage: () => (/* binding */ urlLoadingImage)
 /* harmony export */ });
 /* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./index.js */ "./instapro/index.js");
+/* harmony import */ var _components_liked_post_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/liked-post.js */ "./instapro/components/liked-post.js");
+
+
 
 
 // Замени на свой, чтобы получить независимый от других набор данных.
@@ -27,13 +37,14 @@ __webpack_require__.r(__webpack_exports__);
  * @returns {Promise<string>} - URL загруженного изображения.
  */
 // "боевая" версия инстапро лежит в ключе prod
-
+// https://wedev-api.sky.pro/api/v1/mpf/instapro
 // const personalKey = 'prod'
 const personalKey = 'mpf'
 // const baseHost = 'https://webdev-hw-api.vercel.app'
 const uploadImageEndpoint = 'https://wedev-api.sky.pro/api/upload/image'
 const baseHost = `https://wedev-api.sky.pro`
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`
+let urlLoadingImage
 
 function getAllPosts() {
     return fetch(postsHost)
@@ -70,6 +81,42 @@ function getPosts({ token }) {
         })
 }
 
+const addPost = async ({ token, description, urlLoadingImage }) => {
+    try {
+        // Проверяем, что изображение было загружено
+        if (urlLoadingImage && urlLoadingImage.fileUrl) {
+            const newImageUrl = urlLoadingImage.fileUrl // Получаем URL загруженного изображения
+
+            console.log('Загруженный URL изображения:', newImageUrl) // Логируем URL загруженного изображения
+
+            const post = {
+                description,
+                imageUrl: newImageUrl, // Используем загруженный URL
+            }
+
+            const response = await fetch(postsHost, {
+                method: 'POST',
+                headers: {
+                    Authorization: token, // Используем токен для авторизации
+                },
+                body: JSON.stringify(post),
+            })
+
+            if (!response.ok) {
+                throw new Error('Не удалось добавить пост')
+            }
+
+            return await response.json() // Возвращаем созданный пост
+        } else {
+            console.error('URL загруженного изображения не установлен.')
+            throw new Error('Не выбрано изображение для добавления поста.')
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении поста:', error)
+        throw error // Прокидываем ошибку выше
+    }
+}
+
 function registerUser({ login, password, name, imageUrl }) {
     return fetch(baseHost + '/api/user', {
         method: 'POST',
@@ -90,16 +137,23 @@ function registerUser({ login, password, name, imageUrl }) {
 function loginUser({ login, password }) {
     return fetch(baseHost + '/api/user/login', {
         method: 'POST',
+            'Content-Type': 'application/json', // Убедитесь, что заголовок установлен
+        headers: {},
         body: JSON.stringify({
             login,
             password,
         }),
-    }).then((response) => {
-        if (response.status === 400) {
-            throw new Error('Неверный логин или пароль')
-        }
-        return response.json()
     })
+        .then((response) => {
+            if (response.status === 400) {
+                throw new Error('Неверный логин или пароль')
+            }
+            return response.json() // Возвращаем результат json
+        })
+        .then((data) => {
+            console.log(data) // Логируем данные после успешного парсинга
+            return data // Возвращаем данные
+        })
 }
 
 function uploadImage({ file }) {
@@ -121,7 +175,11 @@ function uploadImage({ file }) {
         .then((data) => {
             if (data.fileUrl) {
                 console.log('Изображение загружено:', data.fileUrl) // Выводим URL загруженной картинки
-                return data.fileUrl // Возвращаем URL загруженного изображения
+                urlLoadingImage = { fileUrl: data.fileUrl }
+                console.log({ fileUrl: data.fileUrl })
+                console.log(urlLoadingImage)
+
+                return { fileUrl: data.fileUrl } // Возвращаем URL загруженного изображения
             } else {
                 throw new Error('Не удалось получить URL загруженного изображения')
             }
@@ -131,6 +189,128 @@ function uploadImage({ file }) {
             throw error // Прокидываем ошибку выше
         })
 }
+
+const likedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для лайка:', postId) // Дебаг: выводим ID поста
+    console.log('Токен:', tokenId) // Дебаг: выводим токен
+
+    try {
+        // Проверяем, что токен и ID поста существуют
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    // Убедитесь, что токен передается корректно
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
+                },
+            })
+
+            // Проверяем успешность ответа
+            if (!response.ok) {
+                const errorMessage = await response.text() // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
+            }
+
+            const data = await response.json() // Ожидаем результат в формате JSON
+            console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+
+            // Обновляем интерфейс, передавая данные в функцию для отображения состояния лайка
+            ;(0,_components_liked_post_js__WEBPACK_IMPORTED_MODULE_2__.renderStatusLikedPost)(data) // Передаем данные напрямую (без обертки в объект)
+            return data // Возвращаем данные
+        } else {
+            throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при лайке поста:', error)
+        throw error // Прокидываем ошибку выше
+    }
+}
+
+
+
+const dislikedPost = async ({ tokenId, postId }) => {
+    console.log('ID поста для дизлайка:', postId) // Дебаг: выводим ID поста
+    console.log('Токен:', tokenId) // Дебаг: выводим токен
+
+    try {
+        if (tokenId && postId) {
+            const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}/dislike`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `${tokenId}`, // Токен без "Bearer"
+                },
+            })
+
+            if (!response.ok) {
+                const errorMessage = await response.text() // Получаем текст ошибки
+                throw new Error(`Ошибка: ${response.status} ${response.statusText} - ${errorMessage}`)
+            }
+
+            const data = await response.json() // Ожидаем результат в формате JSON
+            console.log('Ответ от сервера:', data) // Выводим полученные данные в консоль
+
+            // Проверяем, есть ли данные о посте
+            if (data && data.post) {
+                return data // Возвращаем данные, если они корректные
+            } else {
+                throw new Error('Неверная структура данных') // Если данных нет, выбрасываем ошибку
+            }
+        } else {
+            throw new Error('Token или ID поста отсутствует') // Пользовательская ошибка
+        }
+    } catch (error) {
+        console.error('Ошибка при дизлайке поста:', error)
+        throw error // Прокидываем ошибку выше
+    }
+}
+
+
+const getPostsUsers = async (userId) => {
+    console.log(userId)
+    console.log('Получение постов от сервера')
+    try {
+        const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/user-posts/${userId}`, {
+            method: 'GET',
+        })
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`)
+        }
+
+        // Получение данных в формате JSON
+        const posts = await response.json()
+        console.log('Полученные посты:', posts) // Логируем ответ от сервера
+
+        return posts // Возвращаем посты
+    } catch (error) {
+        console.error('Ошибка при получении постов пользователя:', error)
+        return null // В случае ошибки возвращаем null
+    }
+}
+
+const deletePost = async (postId) => {
+    console.log(postId)
+    try {
+        const response = await fetch(`${baseHost}/api/v1/${personalKey}/instapro/${postId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `${_index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId}`, // Убедитесь, что добавляете токен авторизации
+            },
+        })
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`)
+        }
+
+        const result = await response.json()
+        console.log(result)
+        return result.result === 'ok' // Возвращаем true, если удаление прошло успешно
+    } catch (error) {
+        console.error('Ошибка при удалении поста:', error)
+        return false // В случае ошибки возвращаем false
+    }
+}
+
 
 
 /***/ }),
@@ -150,7 +330,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
+    let imageUrl = ''
+
     const render = () => {
         console.log('запуск рендера поста')
 
@@ -158,18 +341,20 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         const appHtml = `
     <div class="page-container">
     <div class="header-container"></div>
+    <h3 class="form-title">Добавить пост</h3>
+
     <div class="form-input">
-         <h3 class="form-title">Добавить пост</h3>
-    
-    
-    
     <div id="preview-container"></div>
+
     
     <label for="image-description" style="margin-top: 10px;">Описание изображения:</label>
+
     <textarea id="image-description" class="input" rows="4" style="width: 100%; margin-top: 5px"></textarea>
     
     <button class="button" id="add-button">Отправить</button>
     </div>
+
+
    
 </div>
 `
@@ -179,50 +364,46 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
         ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_0__.renderHeaderComponent)({
             element: document.querySelector('.header-container'),
         })
-        const imageDescription = document.getElementById('image-description')
-        const fileInputElement = document.getElementById('file-upload-input')
-        const previewContainer = document.getElementById('preview-container')
-        let imageUrl = ''
+        try {
+            const imageDescription = document.getElementById('image-description')
+            // const fileInputElement = document.getElementById('file-upload-input')
+            const previewContainer = document.getElementById('preview-container')
 
-        // fileInputElement.addEventListener('change', (e) => {
-        //     const file = e.target.files[0]
-        //     if (file) {
-        //         const reader = new FileReader()
-        //         reader.onload = (e) => {
-        //             const img = document.createElement('img')
-        //             img.src = e.target.result
-        //             img.style.maxWidth = '100%'
-        //             img.style.marginTop = '10px'
-        //             previewContainer.innerHTML = ''
-        //             previewContainer.appendChild(img)
-        //             imageUrl = e.target.result
-        //         }
-        //         reader.readAsDataURL(file)
-        //     }
-        // })
+            const validation = () => {
+                if (!imageUrl && imageDescription.value.trim() !== '') {
+                    return alert('Заполните обязательные поля')
+                }
+            }
 
-        if (previewContainer) {
-            (0,_upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__.renderUploadImageComponent)({
-                element: previewContainer,
-                onImageUrlChange(newImgUrl) {
-                    imageUrl = newImgUrl
-                },
-            })
-        }
+            if (previewContainer) {
+                (0,_upload_image_component_js__WEBPACK_IMPORTED_MODULE_1__.renderUploadImageComponent)({
+                    element: previewContainer,
+                    onImageUrlChange(newImgUrl) {
+                        imageUrl = newImgUrl
+                    },
+                })
+            }
 
-        document.getElementById('add-button').addEventListener('click', () => {
-            if (imageDescription.value === '' || !imageUrl) {
-                alert('Заполните обязательные поля')
-                return
-            } else {
+            document.getElementById('add-button').addEventListener('click', () => {
+                // if (imageDescription.value === '' || !imageUrl) {
+                //     alert('Заполните обязательные поля')
+                //     return
+                // } else {
+                validation()
                 onAddPostClick({
                     description: imageDescription.value, // Здесь можно добавить описание, если нужно
 
-                    imageUrl: imageUrl, // Используем сохраненный URL изображения
+                    imageUrl: imageUrl,
+                    // Используем сохраненный URL изображения
                 })
+                console.log(imageDescription.value)
                 console.log('кнопка нажата запуск onAddPostClick')
-            }
-        })
+                // }
+            })
+        } catch (error) {
+            console.error('ошибка:', message)
+            renderAddPostPageComponent()
+        }
     }
 
     render()
@@ -419,6 +600,96 @@ function renderAuthPageComponent({ appEl, setUser }) {
 
 /***/ }),
 
+/***/ "./instapro/components/darkmode.js":
+/*!*****************************************!*\
+  !*** ./instapro/components/darkmode.js ***!
+  \*****************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   initializeThemeToggle: () => (/* binding */ initializeThemeToggle)
+/* harmony export */ });
+const initializeThemeToggle = () => {
+    try {
+        const themeToggle = document.getElementById('theme-toggle');
+        const postImageContainers = document.querySelectorAll('.post-image-container'); // Получаем все контейнеры изображений
+        const sunIcon = document.querySelector('.sun-icon'); // Получаем иконку солнца
+        const moonIcon = document.querySelector('.moon-icon'); // Получаем иконку луны
+
+        // Проверяем наличие элемента themeToggle
+        if (!themeToggle) {
+            console.error('Не найден элемент #theme-toggle');
+            return; // Выходим из функции, если элемент не найден
+        }
+
+        // Проверяем сохраненный режим в localStorage
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggle.checked = true; // Устанавливаем переключатель в положение 'включено'
+
+            // Применяем темный режим ко всем контейнерам
+            postImageContainers.forEach(container => {
+                container.classList.add('dark-mode');
+            });
+
+            // Скрываем солнце и показываем луну
+            sunIcon.style.opacity = 0; // Скрываем иконку солнца
+            moonIcon.style.opacity = 1; // Показываем иконку луны
+        } else {
+            document.body.classList.add('light-mode');
+
+            // Применяем светлый режим ко всем контейнерам
+            postImageContainers.forEach(container => {
+                container.classList.add('light-mode');
+            });
+
+            // Показываем солнце и скрываем луну
+            sunIcon.style.opacity = 1; // Показываем иконку солнца
+            moonIcon.style.opacity = 0; // Скрываем иконку луны
+        }
+
+        // Обработчик события для переключателя
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                // Если переключатель включен, устанавливаем темный режим
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+
+                // Применяем темный режим ко всем контейнерам
+                postImageContainers.forEach(container => {
+                    container.classList.remove('light-mode');
+                    container.classList.add('dark-mode');
+                });
+
+                // Скрываем солнце и показываем луну
+                sunIcon.style.opacity = 0; // Скрываем иконку солнца
+                moonIcon.style.opacity = 1; // Показываем иконку луны
+                localStorage.setItem('theme', 'dark'); // Сохраняем выбранный режим
+            } else {
+                // Если переключатель выключен, устанавливаем светлый режим
+                document.body.classList.remove('dark-mode');
+                document.body.classList.add('light-mode');
+
+                // Применяем светлый режим ко всем контейнерам
+                postImageContainers.forEach(container => {
+                    container.classList.remove('dark-mode');
+                    container.classList.add('light-mode');
+                });
+
+                // Показываем солнце и скрываем луну
+                sunIcon.style.opacity = 1; // Показываем иконку солнца
+                moonIcon.style.opacity = 0; // Скрываем иконку луны
+                localStorage.setItem('theme', 'light'); // Сохраняем выбранный режим
+            }
+        });
+    } catch (error) {
+        console.error('Произошла ошибка:', error);
+    }
+};
+
+/***/ }),
+
 /***/ "./instapro/components/header-component.js":
 /*!*************************************************!*\
   !*** ./instapro/components/header-component.js ***!
@@ -431,68 +702,166 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
 /* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../routes.js */ "./instapro/routes.js");
+/* harmony import */ var _darkmode_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./darkmode.js */ "./instapro/components/darkmode.js");
+
 
 
 
 /**
  * Компонент заголовка страницы.
  * Этот компонент отображает шапку страницы с логотипом, кнопкой добавления постов/входа и кнопкой выхода (если пользователь авторизован).
- * 
+ *
  * @param {HTMLElement} params.element - HTML-элемент, в который будет рендериться заголовок.
  * @returns {HTMLElement} Возвращает элемент заголовка после рендеринга.
  */
 function renderHeaderComponent({ element }) {
-  /**
-   * Рендерит содержимое заголовка.
-   */
-  element.innerHTML = `
+    /**
+     * Рендерит содержимое заголовка.
+     */
+    element.innerHTML = `
   <div class="page-header">
       <h1 class="logo">instapro</h1>
       <button class="header-button add-or-login-button">
-      ${
-        _index_js__WEBPACK_IMPORTED_MODULE_0__.user
-          ? `<div title="Добавить пост" class="add-post-sign"></div>`
-          : "Войти"
-      }
+      ${_index_js__WEBPACK_IMPORTED_MODULE_0__.user ? `<div title="Добавить пост" class="add-post-sign"></div>` : 'Войти'}
+      
       </button>
-      ${
-        _index_js__WEBPACK_IMPORTED_MODULE_0__.user
-          ? `<button title="${_index_js__WEBPACK_IMPORTED_MODULE_0__.user.name}" class="header-button logout-button">Выйти</button>`
-          : ""
-      }  
+      <div class="theme-switcher">
+    <label for="theme-toggle" class="switch">
+        <input type="checkbox" id="theme-toggle">
+        <span class="slider"></span>
+        <span class="icon sun-icon">☀️</span>
+        <span class="icon moon-icon">🌙</span>
+    </label>
+</div>
+      ${_index_js__WEBPACK_IMPORTED_MODULE_0__.user ? `<button title="${_index_js__WEBPACK_IMPORTED_MODULE_0__.user.name}" class="header-button logout-button">Выйти</button>` : ''}  
   </div>
-  `;
+  `
 
-  /**
-   * Обработчик клика по кнопке "Добавить пост"/"Войти".
-   * Если пользователь авторизован, перенаправляет на страницу добавления постов.
-   * Если пользователь не авторизован, перенаправляет на страницу авторизации.
-   */
-  element
-    .querySelector(".add-or-login-button")
-    .addEventListener("click", () => {
-      if (_index_js__WEBPACK_IMPORTED_MODULE_0__.user) {
-        (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.ADD_POSTS_PAGE);
-      } else {
-        (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.AUTH_PAGE);
-      }
-    });
+    /**
+     * Обработчик клика по кнопке "Добавить пост"/"Войти".
+     * Если пользователь авторизован, перенаправляет на страницу добавления постов.
+     * Если пользователь не авторизован, перенаправляет на страницу авторизации.
+     */
+    element.querySelector('.add-or-login-button').addEventListener('click', () => {
+        if (_index_js__WEBPACK_IMPORTED_MODULE_0__.user) {
+            (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.ADD_POSTS_PAGE)
+        } else {
+            (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.AUTH_PAGE)
+        }
+    })
 
-  /**
-   * Обработчик клика по логотипу.
-   * Перенаправляет на страницу с постами.
-   */
-  element.querySelector(".logo").addEventListener("click", () => {
-    (0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.POSTS_PAGE);
-  });
+    /**
+     * Обработчик клика по логотипу.
+     * Перенаправляет на страницу с постами.
+     */
+    element.querySelector('.logo').addEventListener('click', () => {
+        ;(0,_index_js__WEBPACK_IMPORTED_MODULE_0__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_1__.POSTS_PAGE)
+    })
 
-  /**
-   * Обработчик клика по кнопке "Выйти".
-   * Если кнопка существует (т.е. пользователь авторизован), вызывает функцию `logout`.
-   */
-  element.querySelector(".logout-button")?.addEventListener("click", _index_js__WEBPACK_IMPORTED_MODULE_0__.logout);
+    /**
+     * Обработчик клика по кнопке "Выйти".
+     * Если кнопка существует (т.е. пользователь авторизован), вызывает функцию `logout`.
+     */
+    element.querySelector('.logout-button')?.addEventListener('click', _index_js__WEBPACK_IMPORTED_MODULE_0__.logout)
+    document.addEventListener('DOMContentLoaded', _darkmode_js__WEBPACK_IMPORTED_MODULE_2__.initializeThemeToggle)
 
-  return element;
+    return element
+}
+
+
+/***/ }),
+
+/***/ "./instapro/components/liked-post.js":
+/*!*******************************************!*\
+  !*** ./instapro/components/liked-post.js ***!
+  \*******************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   renderStatusLikedPost: () => (/* binding */ renderStatusLikedPost),
+/* harmony export */   statusLikedPost: () => (/* binding */ statusLikedPost)
+/* harmony export */ });
+/* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
+/* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
+ // Импортируем функции для работы с API
+ // Импортируем токен пользователя
+
+const statusLikedPost = () => {
+    const likeButtons = document.querySelectorAll('.like-button') // Находим все кнопки лайка
+
+    console.log('Запуск функции отслеживания лайка')
+
+    likeButtons.forEach((button) => {
+        button.addEventListener('click', async (e) => {
+            const postId = e.currentTarget.getAttribute('data-post-id') // Получаем ID поста
+            const img = button.querySelector('img') // Получаем изображение внутри кнопки
+
+            // Проверяем текущее состояние лайка
+            const isLiked = img.src.includes('like-active.svg') // Если изображение активного лайка, значит пост лайкнут
+
+            try {
+                let result
+
+                button.classList.add('loading')
+                button.disable = true
+
+                if (isLiked) {
+                    // Если пост лайкнут, снимаем лайк
+                    result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.dislikedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+                } else {
+                    // Если пост не лайкнут, ставим лайк
+                    result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.likedPost)({ tokenId: _index_js__WEBPACK_IMPORTED_MODULE_1__.tokenId, postId })
+                }
+                button.classList.remove('loading')
+                button.disable = false
+                
+                // Обновляем интерфейс
+                renderStatusLikedPost(result) // Обновляем состояние
+            } catch (error) {
+                console.error('Ошибка при обработке лайка/дизлайка поста:', error)
+            }
+        })
+    })
+}
+
+const renderStatusLikedPost = (data) => {
+    // Проверяем, что данные корректные
+    if (!data || !data.post) {
+        console.error('Неверная структура данных для обновления статуса лайка:', data)
+        return // Выходим из функции, если данные неверные
+    }
+
+    const buttonEl = document.querySelector(`[data-post-id='${data.post.id}']`)
+
+    if (!buttonEl) {
+        console.error(`Кнопка лайка с ID ${data.post.id} не найдена`)
+        return // Выходим из функции, если кнопка не найдена
+    }
+
+    const img = buttonEl.querySelector('img')
+
+    if (img) {
+        img.src = data.post.isLiked ? './assets/images/like-active.svg' : './assets/images/like-not-active.svg'
+    } else {
+        console.error('Изображение внутри кнопки лайка не найдено')
+    }
+
+    const likesTextElement = buttonEl.nextElementSibling // Получаем следующий элемент
+
+    if (likesTextElement) {
+        const likesText = likesTextElement.querySelector('strong')
+
+        if (likesText) {
+            likesText.textContent = data.post.likes.length // Обновляем количество лайков
+        } else {
+            console.error('Элемент <strong> для количества лайков не найден')
+        }
+    } else {
+        console.error('Элемент для обновления количества лайков не найден')
+    }
+
+    console.log(data.post.isLiked) // Для отладки
 }
 
 
@@ -558,27 +927,38 @@ function renderLoadingPageComponent({ appEl, user, goToPage }) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   renderPostsPageComponent: () => (/* binding */ renderPostsPageComponent)
+/* harmony export */   renderPostsPageComponent: () => (/* binding */ renderPostsPageComponent),
+/* harmony export */   renderUserPostsPageComponent: () => (/* binding */ renderUserPostsPageComponent)
 /* harmony export */ });
 /* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../routes.js */ "./instapro/routes.js");
 /* harmony import */ var _header_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./header-component.js */ "./instapro/components/header-component.js");
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../index.js */ "./instapro/index.js");
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
-/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
-/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
+/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! date-fns */ "./node_modules/date-fns/formatDistanceToNow.js");
+/* harmony import */ var date_fns_locale__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! date-fns/locale */ "./node_modules/date-fns/locale/ru.js");
+/* harmony import */ var _liked_post_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./liked-post.js */ "./instapro/components/liked-post.js");
+/* harmony import */ var _darkmode_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./darkmode.js */ "./instapro/components/darkmode.js");
 
 
+
+ // Убедитесь, что импортируете getPostsUsers
 
 
 
 
 
 function renderPostsPageComponent({ appEl }) {
-    // console.log(appEl);
     const appHtml = `
-        <div class="page-container">
-            <div class="header-container"></div>
-            <ul class="posts"></ul>
+        <div class='modal' id='modal' style='display: none;'>
+    <div class='modal-content'>
+        <button class='close' id='close-modal' aria-label='Закрыть модальное окно'>&times;</button>
+        <img id='modal-image' src='' alt='Модальное изображение'>
+    </div>
+</div>
+        </div>
+        <div class='page-container'>
+            <div class='header-container'></div>
+            <ul class='posts'></ul>
         </div>
     `
 
@@ -586,35 +966,81 @@ function renderPostsPageComponent({ appEl }) {
 
     const renderPostsFromApi = () => {
         const containerPosts = document.querySelector('.posts')
+        containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
+
         _index_js__WEBPACK_IMPORTED_MODULE_2__.posts.forEach((post) => {
             const listEl = document.createElement('li')
             listEl.classList.add('post')
-            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_4__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_5__.ru })
-            // console.log(formattedDate)
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
 
             listEl.innerHTML = `
-                <div class="post-header" data-user-id="${post.user.id}">
-                    <img src="${post.user.imageUrl}" class="post-header__user-image">
-                    <p class="post-header__user-name">${post.user.name}</p>
+                <div class='post-header' data-user-id='${post.user.id}'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
+                    <p class='post-header__user-name'>${post.user.name}</p>
                 </div>
-                <div class="post-image-container">
-                    <img class="post-image" src="${post.imageUrl}">
+                <div class='post-image-container'>
+                    <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
                 </div>
-                <div class="post-likes">
-                    <button data-post-id="${post.id}" class="like-button">
-                        <img src="./assets/images/like-active.svg">
+                <div class='post-likes'>
+                    <button data-post-id='${post.id}' class='like-button'>
+                        <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg' alt='Лайк'>
                     </button>
-                    <p class="post-likes-text">
-                        Нравится: <strong>${post.likes.length}</strong>
-                    </p>
+                    <p class='post-likes-text'>Нравится: <strong>${post.likes.length}</strong></p>
                 </div>
-                <p class="post-text">
-                    <span class="user-name">${post.user.name}</span>
-                    ${post.description}
-                </p>
-                <p class="post-date">${formattedDate}</p>
+                <p class='post-text'>${post.description}</p>
+                <p class='post-date'>${formattedDate}</p>
             `
-            // console.log(post.createdAt)
+
+            // Обработчик для открытия модального окна при нажатии на изображение
+            const postImage = listEl.querySelector('.post-image')
+            postImage.addEventListener('click', () => {
+                const modal = document.getElementById('modal')
+                const modalImage = document.getElementById('modal-image')
+                modalImage.src = post.imageUrl // Устанавливаем изображение в модальном окне
+                modal.style.display = 'block' // Показываем модальное окно
+            })
+
+            // Добавляем обработчик для закрытия модального окна
+            const closeModal = document.getElementById('close-modal')
+            closeModal.addEventListener('click', () => {
+                const modal = document.getElementById('modal')
+                modal.style.display = 'none' // Закрываем модальное окно
+            })
+
+            // Проверяем, является ли текущий пользователь автором поста
+            const storedUserData = localStorage.getItem('user')
+            if (storedUserData) {
+                const currentUser = JSON.parse(storedUserData)
+                const currentUserId = currentUser._id // Получаем ID текущего пользователя
+
+                // Добавляем кнопку удаления только для своих постов
+                if (post.user.id === currentUserId) {
+                    const deleteButton = document.createElement('button')
+                    deleteButton.classList.add('button-delete', 'button') // Добавляем оба класса
+                    deleteButton.dataset.postId = post.id
+                    deleteButton.textContent = 'Удалить'
+
+                    // Добавляем обработчик события для кнопки удаления
+                    deleteButton.addEventListener('click', async () => {
+                        const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
+                        if (confirmDelete) {
+                            const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id) // Функция для удаления поста
+                            if (result) {
+                                listEl.remove() // Удаляем элемент поста из DOM
+                                console.log('Пост удален')
+                            } else {
+                                console.error('Ошибка при удалении поста')
+                            }
+                        }
+                    })
+
+                    listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+                }
+            } else {
+                console.log('Пользователь не найден в localStorage')
+            }
+
+            // Добавляем элемент поста в контейнер
             containerPosts.appendChild(listEl)
         })
     }
@@ -625,14 +1051,112 @@ function renderPostsPageComponent({ appEl }) {
         element: document.querySelector('.header-container'),
     })
 
-    document.querySelectorAll('.post-header').forEach((userEl) => {
-        userEl.addEventListener('click', () => {
-            ;(0,_index_js__WEBPACK_IMPORTED_MODULE_2__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_0__.USER_POSTS_PAGE, {
-                userId: userEl.dataset.userId,
-            })
+    // Обработчик для перехода к постам пользователя
+    const postsContainer = document.querySelector('.posts')
+    if (postsContainer) {
+        postsContainer.addEventListener('click', (event) => {
+            const userEl = event.target.closest('.post-header') // Находим ближайший .post-header
+            if (userEl) {
+                const userId = userEl.dataset.userId
+                if (userId) {
+                    (0,_index_js__WEBPACK_IMPORTED_MODULE_2__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_0__.USER_POSTS_PAGE, { userId: userId })
+                    console.log('Переход к постам пользователя с ID:', userId)
+                }
+            }
         })
-    })
+    }
+
+    // Обновляем состояние лайков
+    (0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)()
+    ;(0,_darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)()
 }
+
+//
+//
+//
+//
+//
+//
+//
+
+function renderUserPostsPageComponent({ appEl, userId }) {
+    console.log('Рендер постов отдельного пользователя')
+    console.log(userId)
+
+    const renderPostsFromApi = async () => {
+        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
+        console.log(containerPosts)
+
+        // Получаем посты пользователя
+        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId) // Получаем посты
+        console.log({ response })
+
+        const posts = response.posts // Извлекаем массив постов
+        console.log({ posts })
+
+        // Проверяем, является ли posts массивом
+        if (!Array.isArray(posts) || posts.length === 0) {
+            containerPosts.innerHTML = `<p>Посты не найдены.</p>`
+            return
+        }
+
+        // Очищаем контейнер перед добавлением новых постов
+        containerPosts.innerHTML = ''
+
+        posts.forEach((post) => {
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
+
+            const listEl = document.createElement('li')
+            listEl.classList.add('post')
+
+            listEl.innerHTML = `
+                <div class='post-header' data-user-id='${post.user.id}' class='post-header'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}' data-user-id='${post.user.id}'>
+                    <p class='post-header__user-name' data-user-id='${post.user.id}'>${post.user.name}</p>
+                </div>
+                <div class='post-image-container'>
+                    <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
+                </div>
+                <div class='post-likes'>
+                    <button data-post-id='${post.id}' class='like-button'>
+                        <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg'>
+                    </button>
+                    <p class='post-likes-text'>
+                        Нравится: <strong>${post.likes.length}</strong>
+                    </p>
+                </div>
+                <p class='post-text'>
+                    ${post.description}
+                </p>
+                <p class='post-date'>${formattedDate}</p>
+            `
+
+            // Добавляем обработчик событий на имя пользователя и аватарку
+            const userNameElement = listEl.querySelector('.post-header__user-name')
+            const userImageElement = listEl.querySelector('.post-header__user-image')
+
+            userNameElement.addEventListener('click', () => {
+                renderUserPostsPageComponent({ appEl, userId: post.user.id })
+            })
+
+            userImageElement.addEventListener('click', () => {
+                renderUserPostsPageComponent({ appEl, userId: post.user.id })
+            })
+
+            containerPosts.appendChild(listEl) // Добавляем пост в контейнер
+        })
+    }
+
+    ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
+        element: document.querySelector('.header-container'),
+    })
+
+    renderPostsFromApi() // Вызываем функцию рендеринга
+    ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)() // Обновляем состояние лайков
+    ;(0,_darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)()
+}
+
+
 
 /***/ }),
 
@@ -649,86 +1173,73 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../api.js */ "./instapro/api.js");
 
 
-
-/**
- * Компонент загрузки изображения.
- * Этот компонент позволяет пользователю загружать изображение и отображать его превью.
- * Если изображение уже загружено, пользователь может заменить его.
- *
- * @param {HTMLElement} params.element - HTML-элемент, в который будет рендериться компонент.
- * @param {Function} params.onImageUrlChange - Функция, вызываемая при изменении URL изображения.
- *                                            Принимает один аргумент - новый URL изображения или пустую строку.
- */
 function renderUploadImageComponent({ element, onImageUrlChange }) {
-  /**
-   * URL текущего изображения.
-   * Изначально пуст, пока пользователь не загрузит изображение.
-   * @type {string}
-   */
-  let imageUrl = "";
+  let imageUrl = ''
 
-  /**
-   * Функция рендеринга компонента.
-   * Отображает интерфейс компонента в зависимости от состояния: 
-   * либо форма выбора файла, либо превью загруженного изображения с кнопкой замены.
-   */
   const render = () => {
-    element.innerHTML = `
-      <div class="upload-image">
-        ${
+      element.innerHTML = `
+    <div class='upload-image'>
+      ${
           imageUrl
-            ? `
-            <div class="file-upload-image-container">
-              <img class="file-upload-image" src="${imageUrl}" alt="Загруженное изображение">
-              <button class="file-upload-remove-button button">Заменить фото</button>
-            </div>
-            `
-            : `
-            <label class="file-upload-label secondary-button">
-              <input
-                type="file"
-                class="file-upload-input"
-                style="display:none"
-              />
-              Выберите фото
-            </label>
+              ? `
+          <div class='file-upload-image-container'>
+            <img class='file-upload-image' src='${imageUrl}' alt='Загруженное изображение'>
+            <button class='file-upload-remove-button button'>Заменить фото</button>
+          </div>
           `
-        }
-      </div>
-    `;
-
-    // Обработчик выбора файла
-    const fileInputElement = element.querySelector(".file-upload-input");
-    fileInputElement?.addEventListener("change", () => {
-      const file = fileInputElement.files[0];
-      if (file) {
-        const labelEl = document.querySelector(".file-upload-label");
-        labelEl.setAttribute("disabled", true);
-        labelEl.textContent = "Загружаю файл...";
-        
-        // Загружаем изображение с помощью API
-        (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.uploadImage)({ file }).then(({ fileUrl }) => {
-          imageUrl = fileUrl; // Сохраняем URL загруженного изображения
-          onImageUrlChange(imageUrl); // Уведомляем о изменении URL изображения
-          render(); // Перерисовываем компонент с новым состоянием
-        });
+              : `
+          <label id='image-input' class='file-upload-label secondary-button'>
+            <input
+              type='file'
+              class='file-upload-input'
+              style='display:none'
+              accept='image/*'
+            />
+            Выберите фото
+          </label>
+        `
       }
-    });
+    </div>
+  `
 
-    // Обработчик удаления изображения
-    element
-      .querySelector(".file-upload-remove-button")
-      ?.addEventListener("click", () => {
-        imageUrl = ""; // Сбрасываем URL изображения
-        onImageUrlChange(imageUrl); // Уведомляем об изменении URL изображения
-        render(); // Перерисовываем компонент
-      });
-  };
+      const fileInputElement = element.querySelector('.file-upload-input')
+      fileInputElement?.addEventListener('change', () => {
+          const file = fileInputElement.files[0]
+          if (file) {
+              const labelEl = document.getElementById('image-input')
+              labelEl.setAttribute('disabled', true)
+              labelEl.textContent = 'Загружаю файл...'
 
-  // Инициализация компонента
-  render();
+              ;(0,_api_js__WEBPACK_IMPORTED_MODULE_0__.uploadImage)({ file }).then(({ fileUrl }) => {
+                  imageUrl = fileUrl
+                  console.log(imageUrl)
+                  onImageUrlChange(imageUrl)
+                  render()
+              }).catch(error => {
+                  console.error('Ошибка загрузки изображения:', error)
+                  labelEl.removeAttribute('disabled')
+                  labelEl.textContent = 'Выберите фото'
+                  imageUrl = ''
+
+              })
+          }
+      })
+
+      const removeButton = element.querySelector('.file-upload-remove-button')
+      removeButton?.addEventListener('click', () => {
+          imageUrl = ''
+          onImageUrlChange(imageUrl)
+          render()
+      })
+  }
+
+  render()
+
+  // Возвращаем объект с fileInputElement
+  return {
+      fileInputElement: element.querySelector('.file-upload-input') // Теперь мы правильно возвращаем fileInputElement
+  }
 }
-
 
 /***/ }),
 
@@ -775,15 +1286,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   logout: () => (/* binding */ logout),
 /* harmony export */   page: () => (/* binding */ page),
 /* harmony export */   posts: () => (/* binding */ posts),
+/* harmony export */   tokenId: () => (/* binding */ tokenId),
 /* harmony export */   user: () => (/* binding */ user)
 /* harmony export */ });
 /* harmony import */ var _api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./api.js */ "./instapro/api.js");
-/* harmony import */ var _components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/add-post-page-component.js */ "./instapro/components/add-post-page-component.js");
-/* harmony import */ var _components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/auth-page-component.js */ "./instapro/components/auth-page-component.js");
-/* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
-/* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
-/* harmony import */ var _components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/loading-page-component.js */ "./instapro/components/loading-page-component.js");
-/* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./helpers.js */ "./instapro/helpers.js");
+/* harmony import */ var _components_liked_post_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/liked-post.js */ "./instapro/components/liked-post.js");
+/* harmony import */ var _components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/add-post-page-component.js */ "./instapro/components/add-post-page-component.js");
+/* harmony import */ var _components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/auth-page-component.js */ "./instapro/components/auth-page-component.js");
+/* harmony import */ var _routes_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./routes.js */ "./instapro/routes.js");
+/* harmony import */ var _components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/posts-page-component.js */ "./instapro/components/posts-page-component.js");
+/* harmony import */ var _components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/loading-page-component.js */ "./instapro/components/loading-page-component.js");
+/* harmony import */ var _helpers_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./helpers.js */ "./instapro/helpers.js");
+/* harmony import */ var _components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./components/darkmode.js */ "./instapro/components/darkmode.js");
 
 
 
@@ -792,61 +1306,77 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-let user = (0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.getUserFromLocalStorage)()
+
+
+let user = (0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.getUserFromLocalStorage)()
 let page = null
 let posts = []
+let tokenId = ''
 
 const getToken = () => {
     const token = user ? `Bearer ${user.token}` : undefined
-    console.log(token);
+    console.log(token)
+    tokenId = token
     return token
 }
 
 const logout = () => {
     user = null
-    ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.removeUserFromLocalStorage)()
-    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+    ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.removeUserFromLocalStorage)()
+    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
 }
 
 /**яя
  * Включает страницу приложения
  */
 const goToPage = (newPage, data) => {
-    if ([_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE].includes(newPage)) {
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE) {
+    if ([_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE, _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE].includes(newPage)) {
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE) {
             /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
-            page = user ? _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE : _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE
+            page = user ? _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE : _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE
             console.log('Начало работы')
-            return renderApp()
+            renderApp()
+            ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+            return
         }
 
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) {
-            page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
+            page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE
             renderApp()
+            ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
 
             return (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.getPosts)({ token: getToken() })
                 .then((newPosts) => {
-                    page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE
+                    page = _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE
                     posts = newPosts
                     renderApp()
+                    ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
                 })
                 .catch((error) => {
                     console.error(error)
-                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
                 })
         }
 
-        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE) {
-            // @@TODO: реализовать получение постов юзера из API
-            console.log('Открываю страницу пользователя: ', data.userId)
-            page = _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE
-            posts = []
-            return renderApp()
+        if (newPage === _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE) {
+            const userId = data.userId // Извлекаем userId
+            if (userId) {
+                console.log(userId)
+                try {
+                    const appEl = document.getElementById('app')
+                    ;(0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderUserPostsPageComponent)({ appEl, userId }) // Передаем appEl и userId
+                } catch (error) {
+                    console.error('Ошибка при рендеринге страницы постов пользователя:', error)
+                }
+            } else {
+                console.error('Не указан userId')
+            }
+            return // Завершаем выполнение функции
         }
 
         page = newPage
         renderApp()
-
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
         return
     }
 
@@ -856,69 +1386,87 @@ const goToPage = (newPage, data) => {
 const renderApp = () => {
     console.log('запуск рендера')
     const appEl = document.getElementById('app')
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.LOADING_PAGE) {
-        return (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderLoadingPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.LOADING_PAGE) {
+        (0,_components_loading_page_component_js__WEBPACK_IMPORTED_MODULE_6__.renderLoadingPageComponent)({
             appEl,
             user,
             goToPage,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.AUTH_PAGE) {
-        return (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAuthPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.AUTH_PAGE) {
+        (0,_components_auth_page_component_js__WEBPACK_IMPORTED_MODULE_3__.renderAuthPageComponent)({
             appEl,
             setUser: (newUser) => {
                 user = newUser
-                ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_6__.saveUserToLocalStorage)(user)
-                goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+                ;(0,_helpers_js__WEBPACK_IMPORTED_MODULE_7__.saveUserToLocalStorage)(user)
+                goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
             },
             user,
             goToPage,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.ADD_POSTS_PAGE) {
-        console.log('Перешли на страницу загрузки поста');
-        return (0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_1__.renderAddPostPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.ADD_POSTS_PAGE) {
+        console.log(page)
+        console.log('Перешли на страницу загрузки поста')
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        ;(0,_components_add_post_page_component_js__WEBPACK_IMPORTED_MODULE_2__.renderAddPostPageComponent)({
             appEl,
-            onAddPostClick({ description, imageUrl }) {
-                // Вызываем функцию загрузки изображения
-                (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.uploadImage)(imageUrl) // Здесь imageUrl должен быть файлом
-                    .then((imageResponse) => {
-                        // Предполагаем, что imageResponse возвращает объект с URL
-                        const postData = {
-                            description: description,
-                            imageUrl: imageResponse, // Используем imageResponse непосредственно
-                        };
-    
-                        // Добавляем пост через API
-                        return addPostToApi(postData);
-                    })
-                    .then(() => {
-                        console.log('Добавляю пост...', { description, imageUrl });
-                        goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE); // Переход на страницу постов
-                    })
-                    .catch((error) => {
-                        console.error('Ошибка добавления поста', error); // Логируем ошибку
-                    });
+            onAddPostClick: async ({ description }) => {
+                try {
+                    console.log(_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage)
+                    const token = getToken() // Получаем токен
+
+                    // Проверяем, выбран ли файл
+                    if (!_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage || !_api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage.fileUrl) {
+                        alert('Пожалуйста, выберите файл для загрузки.')
+                        return // Не продолжать, если файл не выбран
+                    }
+
+                    // Добавляем новый пост
+                    const newPost = await (0,_api_js__WEBPACK_IMPORTED_MODULE_0__.addPost)({ token, description, urlLoadingImage: _api_js__WEBPACK_IMPORTED_MODULE_0__.urlLoadingImage })
+                    posts.push(newPost) // Добавляем новый пост в массив постов
+                    goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) // Переходим на страницу постов
+                    console.log('Добавляю пост')
+                } catch (err) {
+                    console.error('Ошибка при добавлении поста:', err) // Логируем ошибку
+                    alert('Не удалось добавить пост. Попробуйте еще раз.') // Отображаем сообщение пользователю
+                }
             },
-        });
+        })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
+        return
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE) {
-        return (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_4__.renderPostsPageComponent)({
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE) {
+        (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderPostsPageComponent)({
             appEl,
         })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+        return
     }
 
-    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_3__.USER_POSTS_PAGE) {
+    if (page === _routes_js__WEBPACK_IMPORTED_MODULE_4__.USER_POSTS_PAGE) {
+        (0,_components_posts_page_component_js__WEBPACK_IMPORTED_MODULE_5__.renderUserPostsPageComponent)({ appEl })
+        ;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
+
         // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-        appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
+        // appEl.innerHTML = 'Здесь будет страница фотографий пользователя'
         return
     }
 }
 
-goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_3__.POSTS_PAGE)
+goToPage(_routes_js__WEBPACK_IMPORTED_MODULE_4__.POSTS_PAGE)
+;(0,_components_darkmode_js__WEBPACK_IMPORTED_MODULE_8__.initializeThemeToggle)()
 
 
 /***/ }),
