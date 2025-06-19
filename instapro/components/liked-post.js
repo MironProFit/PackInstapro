@@ -29,7 +29,7 @@ export const statusLikedPost = () => {
                 }
                 button.classList.remove('loading')
                 button.disable = false
-                
+
                 // Обновляем интерфейс
                 renderStatusLikedPost(result) // Обновляем состояние
             } catch (error) {

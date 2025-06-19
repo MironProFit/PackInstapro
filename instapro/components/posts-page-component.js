@@ -134,6 +134,7 @@ export function renderPostsPageComponent({ appEl }) {
 //
 //
 //
+
 //
 //
 //
@@ -215,4 +216,3 @@ export function renderUserPostsPageComponent({ appEl, userId }) {
     statusLikedPost() // Обновляем состояние лайков
     initializeThemeToggle()
 }
-
