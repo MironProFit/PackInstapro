@@ -5,39 +5,40 @@ import { renderUploadImageComponent } from './upload-image-component.js'
 export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     let imageUrl = ''
 
+    const escapeHtml = (text) => {
+        const element = document.createElement('div')
+        element.innerText = text
+        return element.innerHTML
+    }
+
     const render = () => {
         console.log('запуск рендера поста')
 
-        // @TODO: Реализовать страницу добавления поста
         const appHtml = `
-    <div class="page-container">
-    <div class="header-container"></div>
-    <h3 class="form-title">Добавить пост</h3>
-
-    <div class="form-input">
-    <div id="preview-container"></div>
-
+        <div class="page-container">
+            <div class="header-container"></div>
+            <h3 class="form-title">Добавить пост</h3>
     
-    <label for="image-description" style="margin-top: 10px;">Описание изображения:</label>
-
-    <textarea id="image-description" class="input" rows="4" style="width: 100%; margin-top: 5px"></textarea>
+            <div class="form-input">
+                <div id="preview-container"></div>
     
-    <button class="button" id="add-button">Отправить</button>
-    </div>
-
-
-   
-</div>
-`
+                <label for="image-description" style="margin-top: 10px;">Описание изображения:</label>
+    
+                <textarea id="image-description" class="input" rows="4" style="width: 100%; margin-top: 5px"></textarea>
+    
+                <button class="button" id="add-button">Отправить</button>
+            </div>
+        </div>
+        `
 
         appEl.innerHTML = appHtml
 
         renderHeaderComponent({
             element: document.querySelector('.header-container'),
         })
+
         try {
             const imageDescription = document.getElementById('image-description')
-            // const fileInputElement = document.getElementById('file-upload-input')
             const previewContainer = document.getElementById('preview-container')
 
             const validation = () => {
@@ -56,23 +57,21 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             }
 
             document.getElementById('add-button').addEventListener('click', () => {
-                // if (imageDescription.value === '' || !imageUrl) {
-                //     alert('Заполните обязательные поля')
-                //     return
-                // } else {
                 validation()
-                onAddPostClick({
-                    description: imageDescription.value, // Здесь можно добавить описание, если нужно
 
+                // Экранирование описания перед его передачей в функцию onAddPostClick
+                const escapedDescription = escapeHtml(imageDescription.value)
+
+                onAddPostClick({
+                    description: escapedDescription, // Передача экранированного описания
                     imageUrl: imageUrl,
-                    // Используем сохраненный URL изображения
                 })
-                console.log(imageDescription.value)
+
+                console.log(escapedDescription)
                 console.log('кнопка нажата запуск onAddPostClick')
-                // }
             })
         } catch (error) {
-            console.error('ошибка:', message)
+            console.error('ошибка:', error.message)
             renderAddPostPageComponent()
         }
     }

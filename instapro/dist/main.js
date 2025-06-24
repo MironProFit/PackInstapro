@@ -334,39 +334,40 @@ __webpack_require__.r(__webpack_exports__);
 function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
     let imageUrl = ''
 
+    const escapeHtml = (text) => {
+        const element = document.createElement('div')
+        element.innerText = text
+        return element.innerHTML
+    }
+
     const render = () => {
         console.log('запуск рендера поста')
 
-        // @TODO: Реализовать страницу добавления поста
         const appHtml = `
-    <div class="page-container">
-    <div class="header-container"></div>
-    <h3 class="form-title">Добавить пост</h3>
-
-    <div class="form-input">
-    <div id="preview-container"></div>
-
+        <div class="page-container">
+            <div class="header-container"></div>
+            <h3 class="form-title">Добавить пост</h3>
     
-    <label for="image-description" style="margin-top: 10px;">Описание изображения:</label>
-
-    <textarea id="image-description" class="input" rows="4" style="width: 100%; margin-top: 5px"></textarea>
+            <div class="form-input">
+                <div id="preview-container"></div>
     
-    <button class="button" id="add-button">Отправить</button>
-    </div>
-
-
-   
-</div>
-`
+                <label for="image-description" style="margin-top: 10px;">Описание изображения:</label>
+    
+                <textarea id="image-description" class="input" rows="4" style="width: 100%; margin-top: 5px"></textarea>
+    
+                <button class="button" id="add-button">Отправить</button>
+            </div>
+        </div>
+        `
 
         appEl.innerHTML = appHtml
 
         ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_0__.renderHeaderComponent)({
             element: document.querySelector('.header-container'),
         })
+
         try {
             const imageDescription = document.getElementById('image-description')
-            // const fileInputElement = document.getElementById('file-upload-input')
             const previewContainer = document.getElementById('preview-container')
 
             const validation = () => {
@@ -385,23 +386,21 @@ function renderAddPostPageComponent({ appEl, onAddPostClick, token }) {
             }
 
             document.getElementById('add-button').addEventListener('click', () => {
-                // if (imageDescription.value === '' || !imageUrl) {
-                //     alert('Заполните обязательные поля')
-                //     return
-                // } else {
                 validation()
-                onAddPostClick({
-                    description: imageDescription.value, // Здесь можно добавить описание, если нужно
 
+                // Экранирование описания перед его передачей в функцию onAddPostClick
+                const escapedDescription = escapeHtml(imageDescription.value)
+
+                onAddPostClick({
+                    description: escapedDescription, // Передача экранированного описания
                     imageUrl: imageUrl,
-                    // Используем сохраненный URL изображения
                 })
-                console.log(imageDescription.value)
+
+                console.log(escapedDescription)
                 console.log('кнопка нажата запуск onAddPostClick')
-                // }
             })
         } catch (error) {
-            console.error('ошибка:', message)
+            console.error('ошибка:', error.message)
             renderAddPostPageComponent()
         }
     }
@@ -815,7 +814,7 @@ const statusLikedPost = () => {
                 }
                 button.classList.remove('loading')
                 button.disable = false
-                
+
                 // Обновляем интерфейс
                 renderStatusLikedPost(result) // Обновляем состояние
             } catch (error) {
@@ -941,7 +940,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // Убедитесь, что импортируете getPostsUsers
+
 
 
 
@@ -950,23 +949,33 @@ __webpack_require__.r(__webpack_exports__);
 function renderPostsPageComponent({ appEl }) {
     const appHtml = `
         <div class='modal' id='modal' style='display: none;'>
-    <div class='modal-content'>
-        <button class='close' id='close-modal' aria-label='Закрыть модальное окно'>&times;</button>
-        <img id='modal-image' src='' alt='Модальное изображение'>
-    </div>
-</div>
+            <div class='modal-content'>
+                <button class='close' id='close-modal' aria-label='Закрыть модальное окно'>&times;</button>
+                <img id='modal-image' src='' alt='Модальное изображение'>
+            </div>
         </div>
         <div class='page-container'>
             <div class='header-container'></div>
             <ul class='posts'></ul>
         </div>
     `
-
     appEl.innerHTML = appHtml
+
+    // ----- Добавляем обработчики закрытия модального окна (один раз!) -----
+    const modal = document.getElementById('modal')
+    const closeModal = document.getElementById('close-modal')
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none'
+    })
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none'
+        }
+    })
 
     const renderPostsFromApi = () => {
         const containerPosts = document.querySelector('.posts')
-        containerPosts.innerHTML = '' // Очищаем контейнер перед добавлением новых постов
+        containerPosts.innerHTML = ''
 
         _index_js__WEBPACK_IMPORTED_MODULE_2__.posts.forEach((post) => {
             const listEl = document.createElement('li')
@@ -991,56 +1000,40 @@ function renderPostsPageComponent({ appEl }) {
                 <p class='post-date'>${formattedDate}</p>
             `
 
-            // Обработчик для открытия модального окна при нажатии на изображение
+            // ---- Открытие модального окна (по клику на картинку) ----
             const postImage = listEl.querySelector('.post-image')
             postImage.addEventListener('click', () => {
-                const modal = document.getElementById('modal')
                 const modalImage = document.getElementById('modal-image')
-                modalImage.src = post.imageUrl // Устанавливаем изображение в модальном окне
-                modal.style.display = 'block' // Показываем модальное окно
+                modalImage.src = post.imageUrl
+                modal.style.display = 'block'
             })
 
-            // Добавляем обработчик для закрытия модального окна
-            const closeModal = document.getElementById('close-modal')
-            closeModal.addEventListener('click', () => {
-                const modal = document.getElementById('modal')
-                modal.style.display = 'none' // Закрываем модальное окно
-            })
-
-            // Проверяем, является ли текущий пользователь автором поста
+            // ---- Кнопка удаления, если автор ----
             const storedUserData = localStorage.getItem('user')
             if (storedUserData) {
                 const currentUser = JSON.parse(storedUserData)
-                const currentUserId = currentUser._id // Получаем ID текущего пользователя
-
-                // Добавляем кнопку удаления только для своих постов
+                const currentUserId = currentUser._id
                 if (post.user.id === currentUserId) {
                     const deleteButton = document.createElement('button')
-                    deleteButton.classList.add('button-delete', 'button') // Добавляем оба класса
+                    deleteButton.classList.add('button-delete', 'button')
                     deleteButton.dataset.postId = post.id
                     deleteButton.textContent = 'Удалить'
-
-                    // Добавляем обработчик события для кнопки удаления
                     deleteButton.addEventListener('click', async () => {
                         const confirmDelete = confirm('Вы уверены, что хотите удалить этот пост?')
                         if (confirmDelete) {
-                            const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id) // Функция для удаления поста
+                            const result = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.deletePost)(post.id)
                             if (result) {
-                                listEl.remove() // Удаляем элемент поста из DOM
+                                listEl.remove()
                                 console.log('Пост удален')
                             } else {
                                 console.error('Ошибка при удалении поста')
                             }
                         }
                     })
-
-                    listEl.appendChild(deleteButton) // Добавляем кнопку удаления под постом
+                    listEl.appendChild(deleteButton)
                 }
-            } else {
-                console.log('Пользователь не найден в localStorage')
             }
 
-            // Добавляем элемент поста в контейнер
             containerPosts.appendChild(listEl)
         })
     }
@@ -1051,11 +1044,11 @@ function renderPostsPageComponent({ appEl }) {
         element: document.querySelector('.header-container'),
     })
 
-    // Обработчик для перехода к постам пользователя
+    // ----- Переход к постам по пользователю -----
     const postsContainer = document.querySelector('.posts')
     if (postsContainer) {
         postsContainer.addEventListener('click', (event) => {
-            const userEl = event.target.closest('.post-header') // Находим ближайший .post-header
+            const userEl = event.target.closest('.post-header')
             if (userEl) {
                 const userId = userEl.dataset.userId
                 if (userId) {
@@ -1066,96 +1059,113 @@ function renderPostsPageComponent({ appEl }) {
         })
     }
 
-    // Обновляем состояние лайков
     (0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)()
     ;(0,_darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)()
 }
 
-//
-//
-//
-//
-//
-//
-//
-
 function renderUserPostsPageComponent({ appEl, userId }) {
-    console.log('Рендер постов отдельного пользователя')
-    console.log(userId)
+    const appHtml = `
+        <div class='modal' id='modal' style='display: none;'>
+            <div class='modal-content'>
+                <button class='close' id='close-modal' aria-label='Закрыть модальное окно'>&times;</button>
+                <img id='modal-image' src='' alt='Модальное изображение'>
+            </div>
+        </div>
+        <div class='page-container'>
+            <div class='header-container'></div>
+            <ul class='posts'></ul>
+        </div>
+    `
+    appEl.innerHTML = appHtml
 
-    const renderPostsFromApi = async () => {
-        const containerPosts = document.querySelector('.posts') // Получаем контейнер постов
-        console.log(containerPosts)
+    const modal = document.getElementById('modal')
+    const closeModal = document.getElementById('close-modal')
+    closeModal.addEventListener('click', () => {
+        modal.style.display = 'none'
+    })
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none'
+        }
+    })
+
+    async function renderPostsFromApi() {
+        const containerPosts = document.querySelector('.posts')
+        const currentUser = JSON.parse(localStorage.getItem('user'))
+        const currentUserId = currentUser?._id
 
         // Получаем посты пользователя
-        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId) // Получаем посты
-        console.log({ response })
+        const response = await (0,_api_js__WEBPACK_IMPORTED_MODULE_3__.getPostsUsers)(userId)
+        const posts = response.posts || response
+        console.log(posts)
 
-        const posts = response.posts // Извлекаем массив постов
-        console.log({ posts })
-
-        // Проверяем, является ли posts массивом
         if (!Array.isArray(posts) || posts.length === 0) {
             containerPosts.innerHTML = `<p>Посты не найдены.</p>`
             return
         }
 
-        // Очищаем контейнер перед добавлением новых постов
         containerPosts.innerHTML = ''
-
         posts.forEach((post) => {
-            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), { addSuffix: true, locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru })
+            const isLikedByCurrentUser = post.likes.some((like) => like._id === currentUserId)
+            console.log(isLikedByCurrentUser)
+
+            const formattedDate = (0,date_fns__WEBPACK_IMPORTED_MODULE_6__.formatDistanceToNow)(new Date(post.createdAt), {
+                addSuffix: true,
+                locale: date_fns_locale__WEBPACK_IMPORTED_MODULE_7__.ru,
+            })
 
             const listEl = document.createElement('li')
             listEl.classList.add('post')
 
             listEl.innerHTML = `
-                <div class='post-header' data-user-id='${post.user.id}' class='post-header'>
-                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}' data-user-id='${post.user.id}'>
-                    <p class='post-header__user-name' data-user-id='${post.user.id}'>${post.user.name}</p>
+                <div class='post-header' data-user-id='${post.user.id}'>
+                    <img src='${post.user.imageUrl}' class='post-header__user-image' alt='${post.user.name}'>
+                    <p class='post-header__user-name'>${post.user.name}</p>
                 </div>
                 <div class='post-image-container'>
                     <img class='post-image' src='${post.imageUrl}' alt='Пост изображение'>
                 </div>
                 <div class='post-likes'>
                     <button data-post-id='${post.id}' class='like-button'>
-                        <img src='./assets/images/${post.isLiked ? 'like-active' : 'like-not-active'}.svg'>
+                        <img src='./assets/images/${isLikedByCurrentUser ? 'like-active' : 'like-not-active'}.svg' alt='Лайк'>
                     </button>
-                    <p class='post-likes-text'>
-                        Нравится: <strong>${post.likes.length}</strong>
-                    </p>
+                    <p class='post-likes-text'>Нравится: <strong>${post.likes.length}</strong></p>
                 </div>
-                <p class='post-text'>
-                    ${post.description}
-                </p>
+                <p class='post-text'>${post.description}</p>
                 <p class='post-date'>${formattedDate}</p>
             `
 
-            // Добавляем обработчик событий на имя пользователя и аватарку
-            const userNameElement = listEl.querySelector('.post-header__user-name')
-            const userImageElement = listEl.querySelector('.post-header__user-image')
-
-            userNameElement.addEventListener('click', () => {
-                renderUserPostsPageComponent({ appEl, userId: post.user.id })
+            // Открытие модалки
+            const postImage = listEl.querySelector('.post-image')
+            postImage.addEventListener('click', () => {
+                document.getElementById('modal-image').src = post.imageUrl
+                modal.style.display = 'block'
             })
 
-            userImageElement.addEventListener('click', () => {
-                renderUserPostsPageComponent({ appEl, userId: post.user.id })
+          
+
+            listEl.querySelector('.like-button').addEventListener('click', async () => {
+                await (0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)(post.id) // нужно чтобы эта функция обновляла сервер и возвращала новое состояние
+                // await renderPosts() // перерендер для обновления лайка
             })
 
-            containerPosts.appendChild(listEl) // Добавляем пост в контейнер
+            // Переход на пользователя
+            listEl.querySelector('.post-header').addEventListener('click', () => {
+                ;(0,_index_js__WEBPACK_IMPORTED_MODULE_2__.goToPage)(_routes_js__WEBPACK_IMPORTED_MODULE_0__.USER_POSTS_PAGE, { userId: post.user.id })
+            })
+
+            containerPosts.appendChild(listEl)
         })
     }
 
-    ;(0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
+    (0,_header_component_js__WEBPACK_IMPORTED_MODULE_1__.renderHeaderComponent)({
         element: document.querySelector('.header-container'),
     })
 
-    renderPostsFromApi() // Вызываем функцию рендеринга
-    ;(0,_liked_post_js__WEBPACK_IMPORTED_MODULE_4__.statusLikedPost)() // Обновляем состояние лайков
+    renderPostsFromApi()
     ;(0,_darkmode_js__WEBPACK_IMPORTED_MODULE_5__.initializeThemeToggle)()
+    // statusLikedPost()
 }
-
 
 
 /***/ }),
